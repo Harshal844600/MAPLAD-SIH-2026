@@ -1,0 +1,379 @@
+@import "tailwindcss";
+
+@layer base {
+  :root,
+  .dark,
+  [data-theme="dark"] {
+    --background: #1C1714;
+    --background-alt: #251E19;
+    --background-subtle: #2E2620;
+    --foreground: #E8DFD4;
+    --muted: #3D332B;
+    --muted-foreground: #9C8B7A;
+    --border: #4A3F35;
+    --border-highlight: #C9A962;
+    --accent: #C9A962;
+    --accent-secondary: #8B2635;
+    --accent-foreground: #1C1714;
+    --card-bg: #251E19;
+    --card-inner: #1C1714;
+    --card-hover: #2E2620;
+    --vignette: rgba(28, 23, 20, 0.45);
+    --shadow-color: rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+
+  .light,
+  [data-theme="light"] {
+    --background: #F7F3EE;
+    --background-alt: #FFFFFF;
+    --background-subtle: #EDE4D8;
+    --foreground: #221A15;
+    --muted: #E2D5C5;
+    --muted-foreground: #6B5B4E;
+    --border: #D8C8B8;
+    --border-highlight: #A88330;
+    --accent: #B8923A;
+    --accent-secondary: #8B2635;
+    --accent-foreground: #FFFFFF;
+    --card-bg: #FFFFFF;
+    --card-inner: #FBF8F4;
+    --card-hover: #F6EFE6;
+    --vignette: rgba(120, 100, 80, 0.08);
+    --shadow-color: rgba(60, 45, 30, 0.08);
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 1.0625rem;
+    line-height: 1.625;
+    min-height: 100vh;
+    position: relative;
+    transition: background-color 300ms ease, color 300ms ease;
+  }
+
+  /* Fixed subtle vignette overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 0%,
+      transparent 55%,
+      var(--vignette) 100%
+    );
+    z-index: 1;
+    transition: background 300ms ease;
+  }
+
+  /* Fixed low-opacity noise texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.022;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    z-index: 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 600;
+    color: var(--foreground);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  /* Accessible focus states with classical brass outline */
+  *:focus-visible {
+    outline: 2px solid var(--accent) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Light mode overrides for deep mahogany hardcoded color utility classes */
+.light .bg-\[\#1C1714\],
+.light .bg-\[\#1c1714\] {
+  background-color: var(--card-inner) !important;
+}
+
+.light .bg-\[\#251E19\],
+.light .bg-\[\#251e19\] {
+  background-color: var(--card-bg) !important;
+}
+
+.light .bg-\[\#2A1D1A\],
+.light .bg-\[\#2a1d1a\] {
+  background-color: #FFF5F5 !important;
+}
+
+.light .bg-\[\#3D332B\],
+.light .bg-\[\#3d332b\] {
+  background-color: var(--muted) !important;
+}
+
+.light .border-\[\#4A3F35\],
+.light .border-\[\#4a3f35\] {
+  border-color: var(--border) !important;
+}
+
+.light .text-\[\#E8DFD4\],
+.light .text-\[\#e8dfd4\] {
+  color: var(--foreground) !important;
+}
+
+.light .text-\[\#9C8B7A\],
+.light .text-\[\#9c8b7a\] {
+  color: var(--muted-foreground) !important;
+}
+
+.light header.sticky {
+  background-color: rgba(247, 243, 238, 0.95) !important;
+}
+
+.light aside {
+  background-color: #FAF6F0 !important;
+}
+
+/* --- Typography Families --- */
+.font-heading {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.font-body {
+  font-family: 'Crimson Pro', Georgia, serif;
+}
+
+.font-display {
+  font-family: 'Cinzel', Trajan, Georgia, serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* --- Signature Arch-Top Containers --- */
+.arch-top {
+  border-radius: 40% 40% 0 0 / 20% 20% 0 0;
+}
+
+/* --- Archival Image Sepia Treatment --- */
+.archival-image {
+  filter: sepia(0.55) contrast(0.95) brightness(0.9);
+  transition: filter 700ms ease-out, transform 700ms ease-out;
+}
+
+.archival-image:hover {
+  filter: sepia(0) contrast(1) brightness(1);
+  transform: scale(1.02);
+}
+
+/* --- Brass Metallic Gradient & Button Styles --- */
+.bg-brass-gradient {
+  background: linear-gradient(180deg, #D4B872 0%, #C9A962 50%, #B8953F 100%);
+}
+
+.light .bg-brass-gradient {
+  background: linear-gradient(180deg, #C9A962 0%, #B8923A 50%, #A07B28 100%);
+  color: #FFFFFF !important;
+}
+
+.shadow-brass-glow {
+  box-shadow: 0 4px 18px rgba(201, 169, 98, 0.35);
+}
+
+.shadow-crimson-glow {
+  box-shadow: 0 4px 18px rgba(139, 38, 53, 0.38);
+}
+
+.shadow-card-hover {
+  transition: transform 250ms ease-out, box-shadow 250ms ease-out, border-color 250ms ease-out;
+}
+.shadow-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px var(--shadow-color);
+  border-color: var(--border-highlight);
+}
+
+/* --- Shimmer Animation on Interactive Elements --- */
+@keyframes brass-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-brass-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(201, 169, 98, 0) 0%,
+    rgba(201, 169, 98, 0.25) 50%,
+    rgba(201, 169, 98, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: brass-shimmer 3.5s infinite;
+}
+
+/* --- Ambient Breathing Glow Animation --- */
+@keyframes ambient-pulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+.animate-ambient-pulse {
+  animation: ambient-pulse 4s ease-in-out infinite;
+}
+
+/* --- Staggered Page / Card Entry --- */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-enter {
+  animation: page-enter 350ms ease-out forwards;
+}
+
+@keyframes soundwave {
+  0% {
+    height: 15%;
+    opacity: 0.4;
+  }
+  50% {
+    height: 90%;
+    opacity: 1;
+  }
+  100% {
+    height: 35%;
+    opacity: 0.6;
+  }
+}
+
+@keyframes border-beam {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes golden-radar {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-radar-sweep {
+  animation: golden-radar 4s linear infinite;
+}
+
+.hover-glow-brass:hover {
+  box-shadow: 0 0 20px rgba(201, 169, 98, 0.28), 0 0 40px rgba(201, 169, 98, 0.12);
+}
+
+.waterflow-bar {
+  background-size: 30px 30px;
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  animation: move-stripes 1.5s linear infinite;
+}
+
+@keyframes move-stripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 30px 0;
+  }
+}
+
+/* --- Engraved Text Effect --- */
+.text-engraved {
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6), -1px -1px 1px rgba(255, 255, 255, 0.08);
+}
+
+/* --- Drop Cap Signature --- */
+.drop-cap::first-letter {
+  font-family: 'Cinzel', serif;
+  float: left;
+  font-size: 3.5rem;
+  line-height: 0.8;
+  padding-top: 4px;
+  padding-right: 10px;
+  padding-bottom: 2px;
+  color: var(--accent);
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+/* --- Wax Seal Component Style --- */
+.wax-seal {
+  background: radial-gradient(circle at 35% 35%, #A32D3F 0%, #8B2635 60%, #5E1420 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.25), inset 0 -2px 4px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Classical Refined Scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Print Styles for Archival Reports */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #1C1714 !important;
+  }
+  body::before, body::after {
+    display: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .page-break {
+    page-break-after: always;
+  }
+}
+
