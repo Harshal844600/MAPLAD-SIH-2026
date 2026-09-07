@@ -13,8 +13,12 @@ import {
   Settings,
   Sparkles,
   BookOpen,
+  Lock,
+  UserCheck,
 } from 'lucide-react';
 import { CornerFlourish } from '../ui';
+import { useCurrentUser } from '../../services/store/useCurrentUser';
+import { AppPermission } from '../../services/store/rbac';
 
 interface AppSidebarProps {
   isOpen?: boolean;
@@ -22,17 +26,27 @@ interface AppSidebarProps {
 }
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose }) => {
-  const navItems = [
-    { to: '/dashboard', label: 'Command Center', icon: LayoutDashboard, volume: 'VOL I' },
-    { to: '/projects', label: 'Project Archive', icon: FolderGit2, count: '1,050' },
-    { to: '/risk', label: 'Risk Intelligence', icon: ShieldAlert, volume: 'VOL II' },
-    { to: '/map', label: 'Geographic Map', icon: MapPin },
-    { to: '/investigations', label: 'Investigations', icon: FileSearch, count: '1' },
-    { to: '/sentinel-ai', label: 'Sentinel AI Copilot', icon: Bot, highlight: true },
-    { to: '/documents', label: 'Document Archive', icon: FileText },
-    { to: '/analytics', label: 'Macro Analytics', icon: BarChart3 },
-    { to: '/reports', label: 'Reports & Dossiers', icon: FileCheck, volume: 'VOL V' },
-    { to: '/admin', label: 'Archive Governance', icon: Settings },
+  const { roleMetadata, can } = useCurrentUser();
+
+  const navItems: {
+    to: string;
+    label: string;
+    icon: any;
+    volume?: string;
+    count?: string;
+    highlight?: boolean;
+    permission?: AppPermission;
+  }[] = [
+    { to: '/dashboard', label: 'Command Center', icon: LayoutDashboard, volume: 'VOL I', permission: 'VIEW_DASHBOARD' },
+    { to: '/projects', label: 'Project Archive', icon: FolderGit2, count: '1,050', permission: 'VIEW_PROJECTS' },
+    { to: '/risk', label: 'Risk Intelligence', icon: ShieldAlert, volume: 'VOL II', permission: 'VIEW_RISK_INTELLIGENCE' },
+    { to: '/map', label: 'Geographic Map', icon: MapPin, permission: 'VIEW_MAP' },
+    { to: '/investigations', label: 'Investigations', icon: FileSearch, count: '1', permission: 'VIEW_INVESTIGATIONS' },
+    { to: '/sentinel-ai', label: 'Sentinel AI Copilot', icon: Bot, highlight: true, permission: 'VIEW_AI_COPILOT' },
+    { to: '/documents', label: 'Document Archive', icon: FileText, permission: 'VIEW_DOCUMENTS_OCR' },
+    { to: '/analytics', label: 'Macro Analytics', icon: BarChart3, permission: 'VIEW_ANALYTICS' },
+    { to: '/reports', label: 'Reports & Dossiers', icon: FileCheck, volume: 'VOL V', permission: 'EXPORT_REPORTS' },
+    { to: '/admin', label: 'Archive Governance', icon: Settings, permission: 'MANAGE_ADMIN_SETTINGS' },
   ];
 
   return (
@@ -50,9 +64,27 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="space-y-6">
+        <div className="space-y-4">
+          {/* Active Role & Clearance Badge */}
+          <div className="p-3 bg-[#251E19] border border-[#C9A962]/40 rounded-[3px] space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-['Cinzel'] font-bold text-[#C9A962]">
+              <span className="flex items-center gap-1">
+                <UserCheck className="w-3 h-3" /> ACTIVE PROFILE
+              </span>
+              <span className="px-1.5 py-0.2 bg-[#1C1714] text-[9px] border border-[#4A3F35] rounded">
+                {roleMetadata.clearanceLevel}
+              </span>
+            </div>
+            <div className="font-['Cormorant_Garamond'] font-bold text-sm text-[#E8DFD4] truncate">
+              {roleMetadata.title}
+            </div>
+            <div className="text-[10px] font-['Crimson_Pro'] text-[#9C8B7A] truncate">
+              {roleMetadata.department}
+            </div>
+          </div>
+
           {/* Section Overline */}
-          <div className="px-3 py-2 border-b border-[#4A3F35] flex items-center justify-between">
+          <div className="px-3 py-1.5 border-b border-[#4A3F35] flex items-center justify-between">
             <span className="text-[10px] font-['Cinzel'] font-bold tracking-[0.25em] text-[#C9A962] uppercase">
               ARCHIVE REGISTER
             </span>
@@ -63,15 +95,19 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
           <nav className="space-y-1" aria-label="Main Navigation">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const isAllowed = !item.permission || can(item.permission);
+
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-3 py-2.5 font-['Cinzel'] text-xs uppercase tracking-[0.15em] rounded-[2px] transition-all duration-200 select-none ${
+                    `flex items-center justify-between px-3 py-2 font-['Cinzel'] text-xs uppercase tracking-[0.15em] rounded-[2px] transition-all duration-200 select-none ${
                       isActive
                         ? 'bg-[#251E19] text-[#C9A962] font-bold border-l-2 border-[#C9A962] shadow-sm'
+                        : !isAllowed
+                        ? 'text-[#736353] hover:text-[#9C8B7A] hover:bg-[#251E19]/40 opacity-75'
                         : item.highlight
                         ? 'text-[#C9A962] hover:bg-[#251E19] hover:text-[#D4B872]'
                         : 'text-[#9C8B7A] hover:text-[#E8DFD4] hover:bg-[#251E19]'
@@ -79,20 +115,23 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
                   }
                 >
                   <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 shrink-0 text-[#C9A962]" strokeWidth={1.5} />
-                    <span>{item.label}</span>
+                    <Icon className={`w-4 h-4 shrink-0 ${isAllowed ? 'text-[#C9A962]' : 'text-[#736353]'}`} strokeWidth={1.5} />
+                    <span className={!isAllowed ? 'line-through text-[#736353]' : ''}>{item.label}</span>
                   </div>
 
-                  {item.volume && (
+                  {!isAllowed ? (
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 bg-[#1C1714] text-[#8B2635] border border-[#8B2635]/40 rounded flex items-center gap-0.5">
+                      <Lock className="w-2.5 h-2.5" /> RESTRICTED
+                    </span>
+                  ) : item.volume ? (
                     <span className="text-[9px] font-['Cinzel'] tracking-widest text-[#9C8B7A]">
                       {item.volume}
                     </span>
-                  )}
-                  {item.count && (
+                  ) : item.count ? (
                     <span className="text-[10px] font-mono px-1.5 py-0.2 bg-[#251E19] text-[#9C8B7A] border border-[#4A3F35] rounded-[2px]">
                       {item.count}
                     </span>
-                  )}
+                  ) : null}
                 </NavLink>
               );
             })}
@@ -102,18 +141,18 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
         {/* Sidebar Footer: Flagship Case Callout */}
         <div className="pt-4 border-t border-[#4A3F35]">
           <a
-            href="#/projects/MPLAD-10291"
+            href="#/projects/proj-10291"
             className="block p-3 bg-[#251E19] border border-[#8B2635]/60 hover:border-[#8B2635] rounded-[4px] transition-colors relative group"
           >
             <div className="flex items-center justify-between text-[10px] font-['Cinzel'] font-bold tracking-widest text-[#fca5a5] uppercase mb-1">
               <span>PRIORITY CASE FILE</span>
               <span className="text-[#fca5a5]">91/100</span>
             </div>
-            <p className="text-sm font-['Cormorant_Garamond'] font-bold text-[#E8DFD4] leading-tight group-hover:text-[#fca5a5] transition-colors">
+            <h4 className="font-['Cormorant_Garamond'] text-sm font-bold text-[#E8DFD4] group-hover:text-[#C9A962] transition-colors line-clamp-1">
               #MPLAD-10291 (Phulpur)
-            </p>
-            <p className="text-xs text-[#9C8B7A] font-['Crimson_Pro'] italic mt-0.5">
-              5 Anomalies • Multi-layer Conflict
+            </h4>
+            <p className="text-[11px] font-['Crimson_Pro'] text-[#9C8B7A] line-clamp-1 italic">
+              Duplicate invoice & 8m overlap
             </p>
           </a>
         </div>

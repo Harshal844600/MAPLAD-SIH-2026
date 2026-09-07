@@ -1,31 +1,24 @@
 import React, { useState } from 'react';
 import { Shield, Bell, UserCheck, AlertTriangle, Sparkles, Menu, ChevronDown, Search } from 'lucide-react';
-import { appStore } from '../../services/store/appStore';
 import { UserRole } from '../../types';
 import { ArchiveLabel, CornerFlourish, ThemeToggle, QuickSearchModal } from '../ui';
+import { useCurrentUser } from '../../services/store/useCurrentUser';
+import { ROLE_DEFINITIONS } from '../../services/store/rbac';
 
 interface AppHeaderProps {
   onToggleSidebar?: () => void;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({ onToggleSidebar }) => {
-  const [currentUser, setCurrentUser] = useState(appStore.getCurrentUser());
+  const { user, role, roleMetadata, setRole } = useCurrentUser();
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showNotificationToast, setShowNotificationToast] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
 
-  const roles: { role: UserRole; label: string }[] = [
-    { role: 'SUPER_ADMIN', label: 'Super Admin (National MoSPI)' },
-    { role: 'STATE_ADMIN', label: 'State Nodal Administrator' },
-    { role: 'DISTRICT_OFFICER', label: 'District Magistrate & Officer' },
-    { role: 'MP_USER', label: 'Parliamentary Representative' },
-    { role: 'AUDITOR', label: 'CAG Forensic Auditor' },
-    { role: 'VIEWER', label: 'Public Transparency Viewer' },
-  ];
+  const rolesList = Object.values(ROLE_DEFINITIONS);
 
-  const handleRoleChange = (role: UserRole) => {
-    appStore.setCurrentUserRole(role);
-    setCurrentUser(appStore.getCurrentUser());
+  const handleRoleChange = (newRole: UserRole) => {
+    setRole(newRole);
     setShowRoleMenu(false);
   };
 
@@ -101,31 +94,47 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onToggleSidebar }) => {
               title="Switch user role for testing"
             >
               <UserCheck className="w-3.5 h-3.5 text-[#C9A962]" strokeWidth={1.5} />
-              <span className="hidden md:inline">{currentUser.role}</span>
-              <span className="md:hidden font-mono">{currentUser.role.slice(0, 5)}</span>
+              <span className="hidden md:inline">{role}</span>
+              <span className="md:hidden font-mono">{role.slice(0, 5)}</span>
               <ChevronDown className="w-3 h-3 text-[#9C8B7A]" />
             </button>
 
             {showRoleMenu && (
-              <div className="absolute right-0 mt-2 w-72 bg-[#251E19] border border-[#C9A962]/50 rounded-[4px] shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95">
+              <div className="absolute right-0 mt-2 w-80 bg-[#251E19] border border-[#C9A962]/50 rounded-[4px] shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95">
                 <CornerFlourish size="sm" color="#C9A962" />
-                <p className="text-[10px] font-['Cinzel'] font-bold tracking-[0.2em] text-[#C9A962] px-2 py-1.5 border-b border-[#4A3F35] uppercase">
-                  SIMULATE ACCESS PRIVILEGE
-                </p>
-                <div className="space-y-1 mt-1 font-['Crimson_Pro']">
-                  {roles.map((r) => (
-                    <button
-                      key={r.role}
-                      onClick={() => handleRoleChange(r.role)}
-                      className={`w-full text-left px-2.5 py-1.5 text-sm rounded-[2px] transition-colors ${
-                        currentUser.role === r.role
-                          ? 'bg-[#C9A962]/15 text-[#C9A962] font-bold border-l-2 border-[#C9A962]'
-                          : 'text-[#9C8B7A] hover:text-[#E8DFD4] hover:bg-[#3D332B]/50'
-                      }`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between px-2 py-1.5 border-b border-[#4A3F35]">
+                  <p className="text-[10px] font-['Cinzel'] font-bold tracking-[0.2em] text-[#C9A962] uppercase">
+                    SIMULATE ACCESS PRIVILEGE
+                  </p>
+                  <span className="text-[9px] font-mono text-[#9C8B7A]">{roleMetadata.clearanceLevel}</span>
+                </div>
+                <div className="space-y-1.5 mt-1.5 font-['Crimson_Pro']">
+                  {rolesList.map((r) => {
+                    const isSelected = role === r.role;
+                    return (
+                      <button
+                        key={r.role}
+                        onClick={() => handleRoleChange(r.role)}
+                        className={`w-full text-left p-2 rounded-[2px] transition-colors ${
+                          isSelected
+                            ? 'bg-[#C9A962]/15 border-l-2 border-[#C9A962]'
+                            : 'hover:bg-[#3D332B]/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={`font-['Cinzel'] text-xs font-bold ${isSelected ? 'text-[#C9A962]' : 'text-[#E8DFD4]'}`}>
+                            {r.title}
+                          </span>
+                          <span className="text-[9px] font-mono px-1 py-0.2 bg-[#1C1714] text-[#9C8B7A] border border-[#4A3F35] rounded">
+                            {r.clearanceLevel}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#9C8B7A] line-clamp-1 italic mt-0.5">
+                          {r.description}
+                        </p>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

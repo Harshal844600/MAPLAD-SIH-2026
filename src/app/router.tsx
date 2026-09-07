@@ -1,5 +1,6 @@
 import { createHashRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '../components/layout/AppLayout';
+import { RoleGuard } from '../components/layout/RoleGuard';
 import { LandingPage } from '../pages/LandingPage';
 import { Dashboard } from '../pages/Dashboard';
 import { Projects } from '../pages/Projects';
@@ -37,7 +38,11 @@ export const router = createHashRouter([
       },
       {
         path: 'risk',
-        element: <RiskIntelligence />,
+        element: (
+          <RoleGuard permission="VIEW_RISK_INTELLIGENCE">
+            <RiskIntelligence />
+          </RoleGuard>
+        ),
       },
       {
         path: 'map',
@@ -45,19 +50,35 @@ export const router = createHashRouter([
       },
       {
         path: 'investigations',
-        element: <Investigations />,
+        element: (
+          <RoleGuard permission="VIEW_INVESTIGATIONS">
+            <Investigations />
+          </RoleGuard>
+        ),
       },
       {
         path: 'investigations/:investigationId',
-        element: <InvestigationDetails />,
+        element: (
+          <RoleGuard permission="VIEW_INVESTIGATIONS">
+            <InvestigationDetails />
+          </RoleGuard>
+        ),
       },
       {
         path: 'sentinel-ai',
-        element: <SentinelAIPage />,
+        element: (
+          <RoleGuard permission="VIEW_AI_COPILOT">
+            <SentinelAIPage />
+          </RoleGuard>
+        ),
       },
       {
         path: 'documents',
-        element: <DocumentOCR />,
+        element: (
+          <RoleGuard permission="VIEW_DOCUMENTS_OCR">
+            <DocumentOCR />
+          </RoleGuard>
+        ),
       },
       {
         path: 'analytics',
@@ -65,11 +86,19 @@ export const router = createHashRouter([
       },
       {
         path: 'reports',
-        element: <Reports />,
+        element: (
+          <RoleGuard permission="EXPORT_REPORTS">
+            <Reports />
+          </RoleGuard>
+        ),
       },
       {
         path: 'admin',
-        element: <Administration />,
+        element: (
+          <RoleGuard permission="MANAGE_ADMIN_SETTINGS">
+            <Administration />
+          </RoleGuard>
+        ),
       },
       {
         path: '*',

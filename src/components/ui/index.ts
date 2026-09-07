@@ -22,6 +22,7 @@ export * from './AmbientDustParticles';
 export * from './AnimatedCounter';
 export * from './Interactive3DCard';
 export * from './AIThinkingWaves';
+export * from './AccessDeniedDossier';
 
 // Backward-compatible aliases
 export { ClassicalCard as WobblyCard } from './ClassicalCard';

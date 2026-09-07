@@ -39,6 +39,7 @@ class AppRepository {
   private currentUser: UserProfile = { ...CURRENT_DEMO_USER };
   private riskWeights: RiskWeights = { ...DEFAULT_RISK_WEIGHTS };
   private initialized = false;
+  private listeners: Set<() => void> = new Set();
 
   constructor() {
     this.init();
@@ -50,13 +51,25 @@ class AppRepository {
     this.initialized = true;
   }
 
+  public subscribe(listener: () => void) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notify() {
+    this.listeners.forEach((fn) => fn());
+  }
+
   public getCurrentUser(): UserProfile {
     return this.currentUser;
   }
 
   public setCurrentUserRole(role: UserProfile['role']) {
-    this.currentUser.role = role;
+    this.currentUser = { ...this.currentUser, role };
     this.logAudit('USER_ROLE_SWITCHED', 'USER', this.currentUser.id, { newRole: role });
+    this.notify();
   }
 
   public getProjects(params?: {
