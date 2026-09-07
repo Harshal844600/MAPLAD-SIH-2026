@@ -180,6 +180,31 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onToggleSidebar }) => {
           </div>
         </div>
       </div>
+
+      {/* LIVE CRITICAL INCIDENT TICKER RIBBON */}
+      <div className="bg-[#2A1D1A] border-b border-[#8B2635]/60 px-4 lg:px-8 py-1.5 text-xs font-['Crimson_Pro'] text-[#E8DFD4] flex items-center justify-between overflow-hidden">
+        <div className="max-w-[1560px] mx-auto w-full flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 truncate">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff4d4d] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ff4d4d]"></span>
+            </span>
+            <span className="font-['Cinzel'] font-bold text-[10px] text-[#ff8080] tracking-wider shrink-0">
+              FORENSIC ALERT:
+            </span>
+            <span className="truncate text-[#E8DFD4]">
+              High-Risk Conflict in <strong className="text-[#C9A962]">#MPLAD-10291 (Phulpur)</strong> — 120% SoR Cost Inflation & ₹18.2L Duplicate Payment
+            </span>
+          </div>
+
+          <a
+            href="#/projects/proj-10291"
+            className="shrink-0 inline-flex items-center gap-1 text-[11px] font-['Cinzel'] font-bold text-[#C9A962] hover:text-[#fff] underline underline-offset-2 transition-colors"
+          >
+            INSPECT CASE DOSSIER →
+          </a>
+        </div>
+      </div>
     </header>
 
     {/* Quick Command Palette Modal */}

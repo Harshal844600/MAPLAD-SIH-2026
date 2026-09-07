@@ -141,6 +141,41 @@ export const Dashboard: React.FC = () => {
         </Interactive3DCard>
       </div>
 
+      {/* QUICK COMMAND LAUNCHPAD */}
+      <div className="p-4 bg-[#251E19]/80 border border-[#C9A962]/40 rounded-[4px] shadow-lg flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs font-['Cinzel'] font-bold text-[#C9A962]">
+          <Sparkles className="w-4 h-4 text-[#C9A962]" />
+          <span>TACTICAL SHORTCUTS:</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/projects/proj-10291"
+            className="px-3 py-1.5 bg-[#8B2635]/20 hover:bg-[#8B2635]/40 border border-[#8B2635] text-[#fca5a5] rounded text-xs font-['Cinzel'] font-bold tracking-wider flex items-center gap-1.5 transition-all"
+          >
+            <span>🚩</span> AUDIT FLAGSHIP #10291
+          </Link>
+          <Link
+            to="/map"
+            className="px-3 py-1.5 bg-[#1C1714] hover:bg-[#2E2620] border border-[#4A3F35] hover:border-[#C9A962] text-[#E8DFD4] rounded text-xs font-['Cinzel'] font-bold tracking-wider flex items-center gap-1.5 transition-all"
+          >
+            <span>🗺️</span> POSTGIS GEO-MAP
+          </Link>
+          <Link
+            to="/copilot"
+            className="px-3 py-1.5 bg-[#C9A962]/10 hover:bg-[#C9A962]/20 border border-[#C9A962]/40 hover:border-[#C9A962] text-[#C9A962] rounded text-xs font-['Cinzel'] font-bold tracking-wider flex items-center gap-1.5 transition-all"
+          >
+            <span>🤖</span> SENTINEL AI COPILOT
+          </Link>
+          <Link
+            to="/ocr"
+            className="px-3 py-1.5 bg-[#1C1714] hover:bg-[#2E2620] border border-[#4A3F35] hover:border-[#C9A962] text-[#E8DFD4] rounded text-xs font-['Cinzel'] font-bold tracking-wider flex items-center gap-1.5 transition-all"
+          >
+            <span>📄</span> OCR VOUCHER AUDITOR
+          </Link>
+        </div>
+      </div>
+
       {/* 3. MAIN DASHBOARD CONTENT (2 COLUMNS) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left: Priority Anomaly Queue (7 cols) */}
