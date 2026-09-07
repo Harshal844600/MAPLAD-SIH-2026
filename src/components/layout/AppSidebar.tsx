@@ -13,7 +13,6 @@ import {
   Settings,
   Sparkles,
   BookOpen,
-  Lock,
   UserCheck,
 } from 'lucide-react';
 import { CornerFlourish } from '../ui';
@@ -28,7 +27,7 @@ interface AppSidebarProps {
 export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose }) => {
   const { roleMetadata, can } = useCurrentUser();
 
-  const navItems: {
+  const allNavItems: {
     to: string;
     label: string;
     icon: any;
@@ -48,6 +47,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
     { to: '/reports', label: 'Reports & Dossiers', icon: FileCheck, volume: 'VOL V', permission: 'EXPORT_REPORTS' },
     { to: '/admin', label: 'Archive Governance', icon: Settings, permission: 'MANAGE_ADMIN_SETTINGS' },
   ];
+
+  // Only show navigation items permitted for the active role
+  const visibleNavItems = allNavItems.filter(
+    (item) => !item.permission || can(item.permission)
+  );
 
   return (
     <>
@@ -91,11 +95,10 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
             <span className="text-[#C9A962] text-xs select-none">✶</span>
           </div>
 
-          {/* Navigation Links */}
+          {/* Navigation Links - Filtered by Active Role */}
           <nav className="space-y-1" aria-label="Main Navigation">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
-              const isAllowed = !item.permission || can(item.permission);
 
               return (
                 <NavLink
@@ -103,11 +106,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
                   to={item.to}
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-3 py-2 font-['Cinzel'] text-xs uppercase tracking-[0.15em] rounded-[2px] transition-all duration-200 select-none ${
+                    `flex items-center justify-between px-3 py-2.5 font-['Cinzel'] text-xs uppercase tracking-[0.15em] rounded-[2px] transition-all duration-200 select-none ${
                       isActive
                         ? 'bg-[#251E19] text-[#C9A962] font-bold border-l-2 border-[#C9A962] shadow-sm'
-                        : !isAllowed
-                        ? 'text-[#736353] hover:text-[#9C8B7A] hover:bg-[#251E19]/40 opacity-75'
                         : item.highlight
                         ? 'text-[#C9A962] hover:bg-[#251E19] hover:text-[#D4B872]'
                         : 'text-[#9C8B7A] hover:text-[#E8DFD4] hover:bg-[#251E19]'
@@ -115,15 +116,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
                   }
                 >
                   <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 shrink-0 ${isAllowed ? 'text-[#C9A962]' : 'text-[#736353]'}`} strokeWidth={1.5} />
-                    <span className={!isAllowed ? 'line-through text-[#736353]' : ''}>{item.label}</span>
+                    <Icon className="w-4 h-4 shrink-0 text-[#C9A962]" strokeWidth={1.5} />
+                    <span>{item.label}</span>
                   </div>
 
-                  {!isAllowed ? (
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 bg-[#1C1714] text-[#8B2635] border border-[#8B2635]/40 rounded flex items-center gap-0.5">
-                      <Lock className="w-2.5 h-2.5" /> RESTRICTED
-                    </span>
-                  ) : item.volume ? (
+                  {item.volume ? (
                     <span className="text-[9px] font-['Cinzel'] tracking-widest text-[#9C8B7A]">
                       {item.volume}
                     </span>
