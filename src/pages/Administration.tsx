@@ -15,6 +15,9 @@ import {
   Server,
   Cloud,
   ExternalLink,
+  Check,
+  Info,
+  Terminal,
 } from 'lucide-react';
 import {
   ClassicalCard,
@@ -23,6 +26,7 @@ import {
   ClassicalTabs,
   VolumeHeader,
   ArchiveLabel,
+  LiveStatusPill,
 } from '../components/ui';
 import { appStore } from '../services/store/appStore';
 import { DEFAULT_RISK_WEIGHTS, RiskWeights } from '../services/risk';
@@ -62,7 +66,7 @@ export const Administration: React.FC = () => {
   const handleSaveWeights = () => {
     setSaveSuccess(true);
     appStore.logAudit('RISK_WEIGHTS_UPDATED', 'SYSTEM_SETTINGS', undefined, weights);
-    setTimeout(() => setSaveSuccess(false), 2000);
+    setTimeout(() => setSaveSuccess(false), 2500);
   };
 
   return (
@@ -70,11 +74,14 @@ export const Administration: React.FC = () => {
       {/* 1. VOLUME HEADER */}
       <VolumeHeader
         volume="SYSTEM ADMINISTRATION"
-        title="ARCHIVE ADMINISTRATION & GOVERNANCE"
-        subtitle="Configure risk formula weights, toggle runtime feature flags, inspect infrastructure health, and verify audit ledgers."
+        title="Archive Administration & Governance"
+        subtitle="Configure risk formula weights, toggle runtime feature flags, inspect infrastructure health, and verify tamper-evident audit ledgers."
         action={
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#8B2635]/20 border border-[#8B2635] rounded text-xs font-['Cinzel'] tracking-widest text-[#E8DFD4]">
-            <ShieldAlert className="w-3.5 h-3.5 text-[#8B2635]" /> SUPERVISORY PRIVILEGES ACTIVE
+          <div className="flex items-center gap-3">
+            <LiveStatusPill label="ADMIN SUPERVISORY" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-950/40 light:bg-red-50 border border-red-500/30 light:border-red-300 rounded-xl text-xs font-mono tracking-wider text-red-300 light:text-red-700 font-bold">
+              <ShieldAlert className="w-3.5 h-3.5 text-red-400 light:text-red-600" /> ROOT CLEARANCE
+            </div>
           </div>
         }
       />
@@ -93,18 +100,18 @@ export const Administration: React.FC = () => {
 
       {/* TAB 1: RISK FORMULA WEIGHTS */}
       {activeTab === 'weights' && (
-        <ClassicalCard className="p-6 space-y-6">
-          <div className="border-b border-[#4A3F35] pb-3">
+        <ClassicalCard className="p-6 space-y-6 border-beam-card">
+          <div className="border-b border-white/10 light:border-slate-200 pb-3">
             <ArchiveLabel text="COMPOSITE RISK COEFFICIENTS" />
-            <h3 className="text-xl font-['Cormorant_Garamond'] font-bold text-[#E8DFD4] mt-1">
+            <h3 className="text-xl font-bold font-serif text-white light:text-slate-900 mt-1">
               Risk Score Multiplier Allocation
             </h3>
-            <p className="text-xs text-[#9C8B7A] font-['Crimson_Pro']">
-              Adjust algorithmic contribution for each forensic category. Total multiplier weight must normalize to 1.00 (100%).
+            <p className="text-xs text-zinc-400 light:text-slate-600 font-sans mt-1">
+              Adjust algorithmic contribution for each forensic category. Multipliers automatically normalize into the composite 0–100 risk score.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-['Crimson_Pro']">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
               { key: 'financial', label: 'Financial Discrepancies (Cost/Invoice)', val: weights.financial },
               { key: 'timeline', label: 'Timeline Chronology Inversions', val: weights.timeline },
@@ -113,10 +120,10 @@ export const Administration: React.FC = () => {
               { key: 'documents', label: 'Document OCR Mismatch Extraction', val: weights.documents },
               { key: 'duplicate', label: 'Fuzzy Semantic Work Duplication', val: weights.duplicate },
             ].map((item) => (
-              <div key={item.key} className="space-y-2 p-4 bg-[#1C1714] border border-[#4A3F35] rounded">
-                <div className="flex justify-between text-sm font-semibold text-[#E8DFD4]">
-                  <span>{item.label}</span>
-                  <span className="font-['Cinzel'] font-bold text-[#C9A962]">
+              <div key={item.key} className="space-y-3 p-4 bg-white/[0.03] light:bg-slate-50 border border-white/10 light:border-slate-200 rounded-xl">
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="font-bold text-white light:text-slate-900">{item.label}</span>
+                  <span className="text-[#c9b8a0] light:text-amber-800 font-bold">
                     {Math.round(item.val * 100)}% ({item.val.toFixed(2)})
                   </span>
                 </div>
@@ -127,16 +134,16 @@ export const Administration: React.FC = () => {
                   step="0.05"
                   value={item.val}
                   onChange={(e) => handleWeightChange(item.key as any, parseFloat(e.target.value))}
-                  className="w-full accent-[#C9A962] cursor-pointer"
+                  className="w-full accent-[#c9b8a0] cursor-pointer h-2 bg-white/10 light:bg-slate-200 rounded-lg"
                 />
               </div>
             ))}
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-[#4A3F35]">
-            <span className="text-xs font-['Cinzel'] font-bold text-[#9C8B7A]">
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/10 light:border-slate-200">
+            <span className="text-xs font-mono text-zinc-400 light:text-slate-600">
               NORMALIZED TOTAL:{' '}
-              <span className="text-[#C9A962]">
+              <span className="text-[#c9b8a0] light:text-amber-800 font-bold">
                 {(
                   weights.financial +
                   weights.timeline +
@@ -153,8 +160,9 @@ export const Administration: React.FC = () => {
               variant="primary"
               size="md"
               onClick={handleSaveWeights}
+              icon={saveSuccess ? <Check className="w-4 h-4 text-emerald-400" /> : undefined}
             >
-              {saveSuccess ? 'WEIGHTS APPLIED' : 'SAVE & RE-INDEX ENGINE'}
+              {saveSuccess ? 'WEIGHTS SAVED & APPLIED' : 'SAVE & RE-INDEX ENGINE'}
             </ClassicalButton>
           </div>
         </ClassicalCard>
@@ -164,28 +172,28 @@ export const Administration: React.FC = () => {
       {activeTab === 'health' && (
         <div className="space-y-6">
           {/* SUPABASE CLOUD CONNECTION STATUS PANEL */}
-          <ClassicalCard className="p-6 space-y-4 border-[#C9A962]/40 bg-[#1C1714]">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#4A3F35] pb-4">
+          <ClassicalCard className="p-6 space-y-6 border-beam-card">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 light:border-slate-200 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#C9A962]/10 border border-[#C9A962]/40 flex items-center justify-center text-[#C9A962]">
+                <div className="w-10 h-10 rounded-xl bg-[#c9b8a0]/10 light:bg-amber-100 border border-[#c9b8a0]/30 light:border-amber-300 flex items-center justify-center text-[#c9b8a0] light:text-amber-800">
                   <Cloud className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-['Cormorant_Garamond'] font-bold text-[#E8DFD4]">
+                    <h3 className="text-xl font-bold font-serif text-white light:text-slate-900">
                       Supabase Cloud Backend (Zero Docker)
                     </h3>
                     {supabaseHealth?.connected ? (
-                      <span className="px-2 py-0.5 text-[10px] font-['Cinzel'] font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-700/50 rounded flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 text-[10px] font-mono font-bold bg-emerald-950/60 light:bg-emerald-50 text-emerald-400 light:text-emerald-700 border border-emerald-500/40 light:border-emerald-300 rounded-full flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> CONNECTED & ACTIVE
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 text-[10px] font-['Cinzel'] font-bold bg-amber-950/60 text-[#C9A962] border border-[#C9A962]/50 rounded flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" /> DEMO IN-MEMORY REPOSITORY
+                      <span className="px-2.5 py-0.5 text-[10px] font-mono font-bold bg-amber-950/60 light:bg-amber-50 text-[#e8d5b7] light:text-amber-800 border border-[#c9b8a0]/50 light:border-amber-300 rounded-full flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 text-amber-400 light:text-amber-600" /> DEMO IN-MEMORY REPOSITORY
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#9C8B7A] font-['Crimson_Pro'] mt-0.5">
+                  <p className="text-xs text-zinc-400 light:text-slate-600 mt-0.5 font-sans">
                     Managed PostgreSQL 15, PostGIS Geospatial Engine, Storage Buckets & Realtime WebSockets.
                   </p>
                 </div>
@@ -202,43 +210,85 @@ export const Administration: React.FC = () => {
               </ClassicalButton>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-['Crimson_Pro'] text-xs">
-              <div className="p-3 bg-[#15110E] border border-[#4A3F35] rounded space-y-1">
-                <div className="text-[10px] font-['Cinzel'] text-[#9C8B7A]">ENDPOINT URL</div>
-                <div className="font-mono text-[#E8DFD4] truncate">{supabaseHealth?.url || 'Checking...'}</div>
+            {/* Diagnostics 3-column Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
+              <div className="p-4 bg-black/40 light:bg-white border border-white/10 light:border-slate-300 rounded-xl space-y-1.5 shadow-sm">
+                <div className="text-[10px] font-bold text-zinc-400 light:text-slate-500 uppercase tracking-wider">
+                  ENDPOINT URL
+                </div>
+                <div className="text-zinc-200 light:text-slate-900 font-mono font-bold text-xs truncate">
+                  {supabaseHealth?.url || 'https://lqniwrwmllscwgeqyzps.supabase.co'}
+                </div>
               </div>
-              <div className="p-3 bg-[#15110E] border border-[#4A3F35] rounded space-y-1">
-                <div className="text-[10px] font-['Cinzel'] text-[#9C8B7A]">ROUNDTRIP LATENCY</div>
-                <div className="font-mono text-[#C9A962]">
+
+              <div className="p-4 bg-black/40 light:bg-white border border-white/10 light:border-slate-300 rounded-xl space-y-1.5 shadow-sm">
+                <div className="text-[10px] font-bold text-zinc-400 light:text-slate-500 uppercase tracking-wider">
+                  ROUNDTRIP LATENCY
+                </div>
+                <div className="text-[#c9b8a0] light:text-amber-700 font-mono font-bold text-xs">
                   {supabaseHealth?.latencyMs ? `${supabaseHealth.latencyMs} ms` : 'N/A (Local Mock)'}
                 </div>
               </div>
-              <div className="p-3 bg-[#15110E] border border-[#4A3F35] rounded space-y-1">
-                <div className="text-[10px] font-['Cinzel'] text-[#9C8B7A]">STATUS DIAGNOSTIC</div>
-                <div className="text-[#E8DFD4] truncate">
+
+              <div className="p-4 bg-black/40 light:bg-white border border-white/10 light:border-slate-300 rounded-xl space-y-1.5 shadow-sm">
+                <div className="text-[10px] font-bold text-zinc-400 light:text-slate-500 uppercase tracking-wider">
+                  STATUS DIAGNOSTIC
+                </div>
+                <div className="text-zinc-200 light:text-slate-900 text-xs font-sans truncate font-medium">
                   {supabaseHealth?.connected
                     ? 'All database tables and PostGIS reachable'
-                    : supabaseHealth?.error || 'Running in high-fidelity demo fallback mode'}
+                    : supabaseHealth?.error || 'VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is missing or using placeholder values'}
                 </div>
               </div>
             </div>
 
+            {/* High-Contrast Supabase Connect Guide Box */}
             {!supabaseHealth?.connected && (
-              <div className="p-4 bg-[#231E1B] border border-[#C9A962]/30 rounded space-y-2 text-xs font-['Crimson_Pro']">
-                <div className="font-['Cinzel'] font-bold text-[#C9A962] text-[11px] flex items-center gap-1.5">
-                  <Database className="w-3.5 h-3.5" /> HOW TO CONNECT YOUR FREE SUPABASE CLOUD PROJECT:
+              <div className="p-5 bg-amber-950/20 light:bg-amber-50/95 border border-[#c9b8a0]/40 light:border-amber-300 rounded-xl space-y-3 text-xs shadow-sm">
+                <div className="font-mono font-bold text-[#e8d5b7] light:text-amber-900 text-xs flex items-center gap-2">
+                  <Database className="w-4 h-4 text-amber-400 light:text-amber-700" />
+                  <span>HOW TO CONNECT YOUR FREE SUPABASE CLOUD PROJECT:</span>
                 </div>
-                <ol className="list-decimal list-inside space-y-1 text-[#E8DFD4]">
-                  <li>Create a free project at <span className="font-mono text-[#C9A962]">supabase.com</span>.</li>
-                  <li>Copy SQL from <span className="font-mono text-[#C9A962]">supabase/full_schema_and_seed.sql</span> into Supabase <strong>SQL Editor</strong> and click <strong>Run</strong>.</li>
-                  <li>Paste your <span className="font-mono text-[#C9A962]">VITE_SUPABASE_URL</span> and <span className="font-mono text-[#C9A962]">VITE_SUPABASE_ANON_KEY</span> into <span className="font-mono text-[#C9A962]">.env</span>.</li>
+                <ol className="list-decimal list-inside space-y-2 text-zinc-300 light:text-slate-800 font-sans leading-relaxed">
+                  <li>
+                    Create a free project at{' '}
+                    <a
+                      href="https://supabase.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono font-bold text-[#c9b8a0] light:text-amber-800 underline hover:text-white light:hover:text-amber-900"
+                    >
+                      supabase.com
+                    </a>.
+                  </li>
+                  <li>
+                    Copy SQL from{' '}
+                    <code className="font-mono font-bold px-1.5 py-0.5 rounded bg-black/40 light:bg-white border border-white/10 light:border-amber-300 text-[#c9b8a0] light:text-amber-900">
+                      supabase/full_schema_and_seed.sql
+                    </code>{' '}
+                    into Supabase <strong className="text-white light:text-slate-900">SQL Editor</strong> and click <strong className="text-white light:text-slate-900">Run</strong>.
+                  </li>
+                  <li>
+                    Paste your{' '}
+                    <code className="font-mono font-bold px-1.5 py-0.5 rounded bg-black/40 light:bg-white border border-white/10 light:border-amber-300 text-[#c9b8a0] light:text-amber-900">
+                      VITE_SUPABASE_URL
+                    </code>{' '}
+                    and{' '}
+                    <code className="font-mono font-bold px-1.5 py-0.5 rounded bg-black/40 light:bg-white border border-white/10 light:border-amber-300 text-[#c9b8a0] light:text-amber-900">
+                      VITE_SUPABASE_ANON_KEY
+                    </code>{' '}
+                    into{' '}
+                    <code className="font-mono font-bold px-1.5 py-0.5 rounded bg-black/40 light:bg-white border border-white/10 light:border-amber-300 text-[#c9b8a0] light:text-amber-900">
+                      .env
+                    </code>.
+                  </li>
                 </ol>
               </div>
             )}
           </ClassicalCard>
 
           {/* SERVICE HEALTH TILES */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-['Crimson_Pro']">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 name: 'PostgreSQL Database',
@@ -252,15 +302,15 @@ export const Administration: React.FC = () => {
               { name: 'Audit Log Integrity', status: 'VERIFIED', latency: '0ms', details: 'SHA-256 hash chains valid' },
               { name: 'Background Job Queue', status: 'IDLE', latency: '0 pending', details: 'Workers running (4/4)' },
             ].map((svc) => (
-              <ClassicalCard key={svc.name} className="p-5 space-y-2">
+              <ClassicalCard key={svc.name} className="p-5 space-y-2 border-beam-card">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-['Cinzel'] font-bold text-[#C9A962] bg-[#1C1714] px-2 py-0.5 border border-[#4A3F35] rounded">
+                  <span className="text-[10px] font-mono font-bold text-[#c9b8a0] light:text-amber-800 bg-white/5 light:bg-slate-100 px-2.5 py-1 border border-white/10 light:border-slate-300 rounded-lg">
                     ● {svc.status}
                   </span>
-                  <span className="text-xs text-[#9C8B7A] font-mono">{svc.latency}</span>
+                  <span className="text-xs text-zinc-400 light:text-slate-500 font-mono">{svc.latency}</span>
                 </div>
-                <h4 className="font-['Cormorant_Garamond'] font-bold text-lg text-[#E8DFD4]">{svc.name}</h4>
-                <p className="text-xs text-[#9C8B7A]">{svc.details}</p>
+                <h4 className="font-bold text-base text-white light:text-slate-900 font-sans">{svc.name}</h4>
+                <p className="text-xs text-zinc-400 light:text-slate-500 font-mono">{svc.details}</p>
               </ClassicalCard>
             ))}
           </div>
@@ -269,37 +319,37 @@ export const Administration: React.FC = () => {
 
       {/* TAB 3: IMMUTABLE AUDIT LOGS */}
       {activeTab === 'audit' && (
-        <ClassicalCard className="p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-[#4A3F35] pb-2">
-            <ArchiveLabel text="TAMPER-EVIDENT AUDIT TRAIL" />
-            <span className="text-xs font-['Cinzel'] text-[#9C8B7A]">STRICT RLS PROTECTED</span>
+        <ClassicalCard className="p-6 space-y-4 border-beam-card">
+          <div className="flex items-center justify-between border-b border-white/10 light:border-slate-200 pb-3">
+            <ArchiveLabel text="TAMPER-EVIDENT CRYPTOGRAPHIC AUDIT TRAIL" />
+            <span className="text-xs font-mono text-zinc-400 light:text-slate-500 font-bold">STRICT RLS PROTECTED</span>
           </div>
 
-          <div className="overflow-x-auto border border-[#4A3F35] rounded">
-            <table className="w-full text-left text-xs font-['Crimson_Pro']">
+          <div className="overflow-x-auto border border-white/10 light:border-slate-200 rounded-xl">
+            <table className="w-full text-left text-xs font-sans">
               <thead>
-                <tr className="bg-[#1C1714] border-b border-[#4A3F35] font-['Cinzel'] text-[11px] text-[#C9A962] tracking-wider">
+                <tr className="bg-white/[0.04] light:bg-slate-100 border-b border-white/10 light:border-slate-200 font-mono text-[11px] text-[#c9b8a0] light:text-slate-700 tracking-wider">
                   <th className="p-3">Seq #</th>
                   <th className="p-3">Actor</th>
                   <th className="p-3">Action</th>
                   <th className="p-3">Target Entity</th>
-                  <th className="p-3">SHA-256 Tamper Hash</th>
+                  <th className="p-3">SHA-256 Hash</th>
                   <th className="p-3">Timestamp</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#4A3F35]/50 text-[#E8DFD4]">
+              <tbody className="divide-y divide-white/5 light:divide-slate-200 text-zinc-200 light:text-slate-800">
                 {auditLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-[#1C1714]/40">
-                    <td className="p-3 font-mono font-bold text-[#C9A962]">#{log.sequence_number}</td>
-                    <td className="p-3 text-sm">{log.actor_name}</td>
-                    <td className="p-3 font-semibold font-['Cinzel'] text-[11px] text-[#E8DFD4]">{log.action}</td>
-                    <td className="p-3 text-xs text-[#9C8B7A]">
+                  <tr key={log.id} className="hover:bg-white/[0.02] light:hover:bg-slate-50">
+                    <td className="p-3 font-mono font-bold text-[#c9b8a0] light:text-amber-800">#{log.sequence_number}</td>
+                    <td className="p-3 font-medium text-white light:text-slate-900">{log.actor_name}</td>
+                    <td className="p-3 font-mono text-[11px] text-zinc-300 light:text-slate-700">{log.action}</td>
+                    <td className="p-3 text-xs text-zinc-400 light:text-slate-500 font-mono">
                       {log.entity_type} {log.entity_label || log.entity_id || ''}
                     </td>
-                    <td className="p-3 font-mono text-[10px] text-[#9C8B7A] truncate max-w-[120px]">
+                    <td className="p-3 font-mono text-[10px] text-zinc-500 light:text-slate-400 truncate max-w-[140px]">
                       {log.tamper_hash}
                     </td>
-                    <td className="p-3 font-mono text-[11px] text-[#9C8B7A]">
+                    <td className="p-3 font-mono text-[11px] text-zinc-400 light:text-slate-500">
                       {new Date(log.created_at).toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -316,28 +366,28 @@ export const Administration: React.FC = () => {
 
       {/* TAB 4: FEATURE FLAGS */}
       {activeTab === 'flags' && (
-        <ClassicalCard className="p-6 space-y-4">
+        <ClassicalCard className="p-6 space-y-4 border-beam-card">
           <ArchiveLabel text="DYNAMIC SYSTEM FEATURE FLAGS" />
-          <h3 className="text-xl font-['Cormorant_Garamond'] font-bold text-[#E8DFD4]">
+          <h3 className="text-xl font-bold font-serif text-white light:text-slate-900">
             Runtime Subsystem Activation
           </h3>
 
-          <div className="space-y-3 divide-y divide-[#4A3F35] font-['Crimson_Pro']">
+          <div className="space-y-3 divide-y divide-white/10 light:divide-slate-200">
             {[
               { key: 'enable_groq_ai', label: 'Enable Groq AI Copilot & Automated Case Summaries' },
               { key: 'enable_ml_anomaly_engine', label: 'Enable Statistical Isolation Forest & Heuristic Scorer' },
               { key: 'enable_document_ocr', label: 'Enable Client & Server PDF/Image OCR Extraction' },
               { key: 'enable_demo_mode', label: 'Enable Synthetic 1,000+ Project Dataset Generator' },
             ].map((flag) => (
-              <div key={flag.key} className="flex items-center justify-between pt-3 text-sm text-[#E8DFD4]">
-                <span className="font-semibold">{flag.label}</span>
+              <div key={flag.key} className="flex items-center justify-between pt-3 text-sm text-white light:text-slate-900">
+                <span className="font-medium font-sans">{flag.label}</span>
                 <input
                   type="checkbox"
                   checked={(flags as any)[flag.key]}
                   onChange={(e) =>
                     setFlags((prev) => ({ ...prev, [flag.key]: e.target.checked }))
                   }
-                  className="w-5 h-5 accent-[#C9A962] cursor-pointer"
+                  className="w-5 h-5 accent-[#c9b8a0] cursor-pointer rounded"
                 />
               </div>
             ))}
@@ -347,4 +397,3 @@ export const Administration: React.FC = () => {
     </div>
   );
 };
-

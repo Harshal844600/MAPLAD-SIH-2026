@@ -16,15 +16,14 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
 }) => {
   return (
     <div
-      className={`relative p-5 border border-[#4A3F35] bg-[#251E19] rounded shadow-md text-[#E8DFD4] ${className}`}
+      className={`relative p-5 border border-white/10 bg-white/[0.03] backdrop-blur-md rounded-[20px] shadow-sm text-gray-200 hover:border-[#a78b71]/30 transition-all ${className}`}
     >
       {title && (
-        <h4 className="font-['Cinzel'] font-bold text-xs tracking-wider text-[#C9A962] mb-2 pb-1.5 border-b border-[#4A3F35]">
-          ✦ {title}
+        <h4 className="font-['Inter'] font-semibold text-xs tracking-wider text-[#c9b8a0] uppercase mb-2 pb-1.5 border-b border-white/10 flex items-center gap-1.5">
+          <span className="text-[#a78b71]">✦</span> {title}
         </h4>
       )}
-      <div className="text-sm font-['Crimson_Pro'] leading-relaxed">{children}</div>
+      <div className="text-sm font-['Inter'] text-gray-300 leading-relaxed">{children}</div>
     </div>
   );
 };
-

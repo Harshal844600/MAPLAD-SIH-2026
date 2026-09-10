@@ -21,7 +21,7 @@ export const ClassicalSelect = React.forwardRef<HTMLSelectElement, ClassicalSele
         {label && (
           <label
             htmlFor={selectId}
-            className="font-['Cinzel'] font-bold text-xs tracking-[0.15em] text-[#C9A962] uppercase"
+            className="font-['Inter'] font-semibold text-xs tracking-wider text-[#c9b8a0] light:text-[#8C735D] uppercase"
           >
             {label}
           </label>
@@ -29,25 +29,25 @@ export const ClassicalSelect = React.forwardRef<HTMLSelectElement, ClassicalSele
         <select
           id={selectId}
           ref={ref}
-          className={`w-full bg-[#251E19] text-[#E8DFD4] font-['Crimson_Pro'] text-base border ${
-            error ? 'border-[#8B2635]' : 'border-[#4A3F35]'
-          } rounded-[4px] px-3.5 py-2.5 min-h-[46px] transition-colors focus:border-[#C9A962] focus:ring-2 focus:ring-[#C9A962]/30 focus:outline-none cursor-pointer ${className}`}
+          className={`w-full bg-white/[0.04] light:bg-white text-white light:text-slate-900 font-['Inter'] text-sm border ${
+            error ? 'border-rose-500/60 bg-rose-950/20 light:bg-rose-50 light:border-rose-300' : 'border-white/10 light:border-slate-300'
+          } rounded-xl px-3.5 py-2.5 min-h-[44px] transition-all focus:border-[#a78b71] light:focus:border-[#8C735D] focus:ring-2 focus:ring-[#a78b71]/30 light:focus:ring-[#8C735D]/20 focus:outline-none cursor-pointer shadow-xs ${className}`}
           {...props}
         >
           {options.map((opt) => {
             const val = typeof opt === 'string' ? opt : opt.value;
             const lbl = typeof opt === 'string' ? opt : opt.label;
             return (
-              <option key={val} value={val} className="bg-[#251E19] text-[#E8DFD4]">
+              <option key={val} value={val} className="bg-[#121212] light:bg-white text-white light:text-slate-900">
                 {lbl}
               </option>
             );
           })}
         </select>
         {error ? (
-          <p className="text-xs text-[#fca5a5] font-['Crimson_Pro'] italic">⚠️ {error}</p>
+          <p className="text-xs text-rose-400 light:text-rose-600 font-['Inter']">⚠️ {error}</p>
         ) : helperText ? (
-          <p className="text-xs text-[#9C8B7A] font-['Crimson_Pro'] italic">{helperText}</p>
+          <p className="text-xs text-gray-400 light:text-slate-500 font-['Inter']">{helperText}</p>
         ) : null}
       </div>
     );
@@ -56,3 +56,4 @@ export const ClassicalSelect = React.forwardRef<HTMLSelectElement, ClassicalSele
 
 ClassicalSelect.displayName = 'ClassicalSelect';
 export const SketchSelect = ClassicalSelect;
+export const GlassSelect = ClassicalSelect;

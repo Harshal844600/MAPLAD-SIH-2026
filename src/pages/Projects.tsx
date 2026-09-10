@@ -8,10 +8,10 @@ import {
   ChevronLeft,
   ChevronRight,
   SlidersHorizontal,
+  FileSpreadsheet,
 } from 'lucide-react';
 import {
   ClassicalCard,
-  DossierCard,
   ClassicalButton,
   ClassicalSearch,
   ClassicalSelect,
@@ -113,38 +113,45 @@ export const Projects: React.FC = () => {
     appStore.logAudit('CSV_EXPORTED', 'PROJECT', undefined, { rowCount: items.length });
   };
 
-  const handleCSVImportSimulate = () => {
+  const handleCSVImport = () => {
     if (!importPreviewText) return;
+    const count = appStore.importProjectsCSV(importPreviewText);
     setImportSuccess(true);
     setTimeout(() => {
       setIsImportModalOpen(false);
       setImportSuccess(false);
       setImportPreviewText('');
-      appStore.logAudit('BULK_CSV_IMPORTED', 'PROJECT', undefined, { recordsAdded: 15 });
-    }, 1500);
+      setCurrentPage(1);
+    }, 1200);
+  };
+
+  const handleLoadSampleCSV = () => {
+    setImportPreviewText(
+      `MPLAD-10901,Solar Microgrid Electrification Phase II,Renewable Energy,Uttar Pradesh,Prayagraj,3200000,Surya Ganga Water & Power,25.4358,81.8463\nMPLAD-10902,Construction of RCC Drain Saidabad Ward 4,Public Health & Sanitation,Uttar Pradesh,Prayagraj,1450000,Apex Infrastructure Ltd.,25.5482,81.9834\nMPLAD-10903,Panchayat Digital Library Community Hub,Education,Bihar,Patna,2100000,Bharat Rural Works Ltd.,25.5941,85.1376`
+    );
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-page-enter">
       {/* 1. VOLUME HEADER */}
       <VolumeHeader
         volume="VOLUME II"
-        title="PROJECT ARCHIVE & LEDGER"
-        subtitle={`Official implementation registry containing ${totalCount.toLocaleString('en-IN')} audited records with forensic risk classification.`}
+        title="Project Ledger & Implementation Registry"
+        subtitle={`Official scheme ledger containing ${totalCount.toLocaleString('en-IN')} audited records with multi-layer forensic risk classifications.`}
         action={
           <div className="flex flex-wrap items-center gap-3">
             <ClassicalButton
               variant="secondary"
               size="md"
-              icon={<Download className="w-4 h-4" />}
+              icon={<Download className="w-4 h-4 text-[#c9b8a0]" />}
               onClick={handleExportCSV}
             >
-              EXPORT ARCHIVE
+              EXPORT CSV
             </ClassicalButton>
             <ClassicalButton
               variant="primary"
               size="md"
-              icon={<Upload className="w-4 h-4" />}
+              icon={<Upload className="w-4 h-4 text-black" />}
               onClick={() => setIsImportModalOpen(true)}
             >
               IMPORT LEDGER BATCH
@@ -154,11 +161,11 @@ export const Projects: React.FC = () => {
       />
 
       {/* 2. SEARCH & FACETED FILTERS BAR */}
-      <ClassicalCard className="p-4 space-y-4">
-        <div className="flex items-center justify-between border-b border-[#4A3F35] pb-2">
+      <div className="p-5 bg-white/[0.03] light:bg-white backdrop-blur-md border border-white/10 light:border-slate-200 rounded-[28px] space-y-4 shadow-sm light:shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+        <div className="flex items-center justify-between border-b border-white/10 light:border-slate-200 pb-3">
           <ArchiveLabel text="RECORD FILTERS & QUERY PARAMETERS" />
-          <span className="font-['Cinzel'] text-xs text-[#9C8B7A] flex items-center gap-1">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-[#C9A962]" /> {items.length} DISPLAYED
+          <span className="font-mono text-xs text-gray-400 light:text-slate-500 flex items-center gap-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#c9b8a0] light:text-[#8C735D]" /> {items.length} DISPLAYED
           </span>
         </div>
 
@@ -235,7 +242,7 @@ export const Projects: React.FC = () => {
             />
           </div>
         </div>
-      </ClassicalCard>
+      </div>
 
       {/* 3. ARCHIVAL DATA TABLE */}
       {items.length === 0 ? (
@@ -253,86 +260,86 @@ export const Projects: React.FC = () => {
           }}
         />
       ) : (
-        <div className="border border-[#4A3F35] bg-[#251E19] rounded shadow-lg overflow-hidden">
+        <div className="border border-white/10 light:border-slate-200 bg-white/[0.02] light:bg-white backdrop-blur-xl rounded-[28px] shadow-sm light:shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#1C1714] border-b border-[#4A3F35] font-['Cinzel'] text-xs text-[#C9A962] tracking-[0.15em] uppercase">
+                <tr className="bg-white/[0.04] light:bg-[#FAF8F5] border-b border-white/10 light:border-slate-200 font-mono text-xs text-[#c9b8a0] light:text-[#8C735D] tracking-wider uppercase">
                   <th
-                    className="p-3.5 cursor-pointer hover:text-[#E8DFD4] transition-colors"
+                    className="p-4 cursor-pointer hover:text-white light:hover:text-slate-950 transition-colors"
                     onClick={() => handleSort('project_code')}
                   >
                     <div className="flex items-center gap-1.5">
                       <span>Dossier Code</span>
-                      <ArrowUpDown className="w-3 h-3 text-[#9C8B7A]" />
+                      <ArrowUpDown className="w-3 h-3 text-gray-400 light:text-slate-500" />
                     </div>
                   </th>
-                  <th className="p-3.5">Title & Jurisdiction</th>
-                  <th className="p-3.5">Category</th>
+                  <th className="p-4">Title & Jurisdiction</th>
+                  <th className="p-4">Category</th>
                   <th
-                    className="p-3.5 cursor-pointer hover:text-[#E8DFD4] transition-colors"
+                    className="p-4 cursor-pointer hover:text-white light:hover:text-slate-950 transition-colors"
                     onClick={() => handleSort('sanctioned_amount')}
                   >
                     <div className="flex items-center gap-1.5">
                       <span>Sanctioned (₹)</span>
-                      <ArrowUpDown className="w-3 h-3 text-[#9C8B7A]" />
+                      <ArrowUpDown className="w-3 h-3 text-gray-400 light:text-slate-500" />
                     </div>
                   </th>
-                  <th className="p-3.5">Vendor / Implementing Body</th>
+                  <th className="p-4">Vendor / Implementing Body</th>
                   <th
-                    className="p-3.5 cursor-pointer hover:text-[#E8DFD4] transition-colors"
+                    className="p-4 cursor-pointer hover:text-white light:hover:text-slate-950 transition-colors"
                     onClick={() => handleSort('risk_score')}
                   >
                     <div className="flex items-center gap-1.5">
                       <span>Risk Assessment</span>
-                      <ArrowUpDown className="w-3 h-3 text-[#9C8B7A]" />
+                      <ArrowUpDown className="w-3 h-3 text-gray-400 light:text-slate-500" />
                     </div>
                   </th>
-                  <th className="p-3.5 text-right">Dossier</th>
+                  <th className="p-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#4A3F35]/50 font-['Crimson_Pro'] text-[#E8DFD4]">
+              <tbody className="divide-y divide-white/5 light:divide-slate-100 font-['Inter'] text-gray-200 light:text-slate-800">
                 {items.map((proj) => (
                   <tr
                     key={proj.id}
-                    className={`hover:bg-[#2E2620] transition-colors ${
-                      proj.risk_score >= 80 ? 'bg-[#8B2635]/10 border-l-2 border-l-[#8B2635]' : ''
+                    className={`hover:bg-white/[0.04] light:hover:bg-[#F8FAFC] transition-colors ${
+                      proj.risk_score >= 80 ? 'bg-rose-950/15 light:bg-rose-50/60 border-l-2 border-l-rose-500' : ''
                     }`}
                   >
-                    <td className="p-3.5 font-['Cinzel'] text-xs font-semibold">
-                      <span className="px-2 py-0.5 bg-[#1C1714] border border-[#4A3F35] text-[#C9A962] rounded">
-                        {proj.project_code}
+                    <td className="p-4 font-mono text-xs font-semibold">
+                      <span className="px-2.5 py-1 bg-black/40 light:bg-slate-100 border border-white/10 light:border-slate-200 text-[#e8d5b7] light:text-[#78350F] rounded-full">
+                        #{proj.project_code}
                       </span>
                     </td>
-                    <td className="p-3.5 max-w-xs">
-                      <div className="font-['Cormorant_Garamond'] text-base font-semibold text-[#E8DFD4] line-clamp-1">
+                    <td className="p-4 max-w-xs">
+                      <div className="font-['Playfair_Display'] text-base font-semibold text-white light:text-slate-900 line-clamp-1">
                         {proj.title}
                       </div>
-                      <div className="text-xs text-[#9C8B7A] font-['Crimson_Pro'] italic">
+                      <div className="text-xs text-gray-400 light:text-slate-500 font-['Inter'] mt-0.5">
                         {proj.location_name}, {proj.district_name}, {proj.state_name}
                       </div>
                     </td>
-                    <td className="p-3.5">
-                      <span className="text-xs font-['Cinzel'] tracking-wider px-2 py-0.5 bg-[#3D332B] text-[#E8DFD4] rounded border border-[#4A3F35]">
+                    <td className="p-4">
+                      <span className="text-xs font-mono px-2.5 py-1 bg-white/5 light:bg-slate-100 text-gray-300 light:text-slate-700 rounded-full border border-white/10 light:border-slate-200">
                         {proj.category_name}
                       </span>
                     </td>
-                    <td className="p-3.5 font-['Cinzel'] font-bold text-sm text-[#C9A962]">
+                    <td className="p-4 font-mono font-bold text-sm text-white light:text-slate-900">
                       ₹{(proj.sanctioned_amount / 100000).toFixed(2)} L
                     </td>
-                    <td className="p-3.5 text-xs">
-                      <div className="font-semibold text-[#E8DFD4]">{proj.vendor_name || 'Unassigned'}</div>
-                      <div className="text-[#9C8B7A] italic text-[11px]">{proj.implementing_agency}</div>
+                    <td className="p-4 text-xs">
+                      <div className="font-semibold text-white light:text-slate-900">{proj.vendor_name || 'Unassigned'}</div>
+                      <div className="text-gray-400 light:text-slate-500 text-[11px]">{proj.implementing_agency}</div>
                     </td>
-                    <td className="p-3.5">
+                    <td className="p-4">
                       <RiskBadge score={proj.risk_score} size="sm" />
                     </td>
-                    <td className="p-3.5 text-right">
+                    <td className="p-4 text-right">
                       <Link to={`/projects/${proj.project_code}`}>
                         <ClassicalButton
-                          variant={proj.risk_score >= 80 ? 'secondary' : 'secondary'}
+                          variant="secondary"
                           size="sm"
-                          icon={<Eye className="w-3.5 h-3.5" />}
+                          icon={<Eye className="w-3.5 h-3.5 text-[#c9b8a0] light:text-[#8C735D]" />}
                         >
                           EXAMINE
                         </ClassicalButton>
@@ -344,10 +351,10 @@ export const Projects: React.FC = () => {
             </table>
           </div>
 
-          {/* Archival Pagination Bar */}
-          <div className="p-4 border-t border-[#4A3F35] bg-[#1C1714] flex flex-col sm:flex-row items-center justify-between gap-3 font-['Cinzel'] text-xs text-[#9C8B7A]">
+          {/* Pagination Bar */}
+          <div className="p-4 border-t border-white/10 light:border-slate-200 bg-white/[0.02] light:bg-[#FAF8F5] flex flex-col sm:flex-row items-center justify-between gap-3 font-mono text-xs text-gray-400 light:text-slate-600">
             <span>
-              FOLIO <strong>{currentPage}</strong> OF <strong>{totalPages}</strong> ({totalCount} TOTAL ENTRIES)
+              PAGE <strong className="text-white light:text-slate-900">{currentPage}</strong> OF <strong className="text-white light:text-slate-900">{totalPages}</strong> ({totalCount} TOTAL WORKS)
             </span>
             <div className="flex items-center gap-2">
               <ClassicalButton
@@ -379,24 +386,27 @@ export const Projects: React.FC = () => {
         subtitle="Import official departmental spreadsheet records with automatic schema validation and deduplication."
         actions={
           <>
-            <ClassicalButton variant="ghost" size="md" onClick={() => setIsImportModalOpen(false)}>
+            <ClassicalButton variant="ghost" size="md" onClick={handleLoadSampleCSV}>
+              PASTE SAMPLE CSV
+            </ClassicalButton>
+            <ClassicalButton variant="secondary" size="md" onClick={() => setIsImportModalOpen(false)}>
               DISMISS
             </ClassicalButton>
             <ClassicalButton
               variant="primary"
               size="md"
               disabled={!importPreviewText || importSuccess}
-              onClick={handleCSVImportSimulate}
+              onClick={handleCSVImport}
             >
-              {importSuccess ? 'RECORD INGESTED' : 'VALIDATE & INGEST'}
+              {importSuccess ? 'RECORD INGESTED & AUDITED' : 'VALIDATE & INGEST'}
             </ClassicalButton>
           </>
         }
       >
-        <div className="space-y-4 font-['Crimson_Pro']">
-          <p className="text-sm text-[#9C8B7A]">
-            Paste raw comma-separated ledger data. Required headers conforming to MoSPI gazette:
-            <code className="text-[#C9A962] block mt-1 font-mono text-xs bg-[#1C1714] p-1.5 border border-[#4A3F35] rounded">
+        <div className="space-y-4 font-['Inter']">
+          <p className="text-sm text-gray-400 light:text-slate-600">
+            Paste raw comma-separated ledger data conforming to the MoSPI data schema:
+            <code className="text-[#e8d5b7] light:text-[#78350F] block mt-1.5 font-mono text-xs bg-black/60 light:bg-slate-100 p-2.5 border border-white/10 light:border-slate-200 rounded-xl">
               project_code, title, category, state, district, sanctioned_amount, vendor_id, lat, lon
             </code>
           </p>
@@ -406,16 +416,15 @@ export const Projects: React.FC = () => {
             value={importPreviewText}
             onChange={(e) => setImportPreviewText(e.target.value)}
             placeholder="MPLAD-10499,Construction of Concrete Culvert,Roads & Bridges,Uttar Pradesh,Prayagraj,1850000,VEND-001,25.4358,81.8463"
-            className="w-full font-mono text-xs p-3 bg-[#1C1714] text-[#E8DFD4] border border-[#4A3F35] rounded focus:border-[#C9A962] focus:outline-none focus:ring-1 focus:ring-[#C9A962]"
+            className="w-full font-mono text-xs p-3.5 bg-white/[0.04] light:bg-white text-white light:text-slate-900 border border-white/10 light:border-slate-300 rounded-2xl focus:border-[#a78b71] light:focus:border-[#8C735D] focus:outline-none focus:ring-1 focus:ring-[#a78b71] shadow-xs"
           />
 
-          <div className="p-3 bg-[#3D332B]/50 border border-[#C9A962]/40 rounded text-xs text-[#E8DFD4]">
-            <strong className="text-[#C9A962] font-['Cinzel'] tracking-wide">IDEMPOTENCY SAFEGUARD: </strong>
-            Duplicate dossier numbers and existing cryptographic hashes are rejected automatically to prevent double-accounting.
+          <div className="p-3.5 bg-[#a78b71]/10 light:bg-[#FFFDF5] border border-[#a78b71]/30 light:border-[#FDE68A] rounded-2xl text-xs text-gray-200 light:text-slate-800">
+            <strong className="text-[#e8d5b7] light:text-[#78350F] font-mono tracking-wide">IDEMPOTENCY SAFEGUARD: </strong>
+            Duplicate dossier numbers and existing cryptographic hashes are rejected automatically to prevent double-disbursements.
           </div>
         </div>
       </ClassicalModal>
     </div>
   );
 };
-

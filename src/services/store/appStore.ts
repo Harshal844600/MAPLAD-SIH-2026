@@ -10,8 +10,10 @@ import {
   ProjectEntity,
   TransactionRecord,
   UserProfile,
+  UserRole,
   VendorInfo,
 } from '../../types';
+
 import {
   CURRENT_DEMO_USER,
   DEMO_DISTRICTS,
@@ -23,10 +25,19 @@ import {
   FLAGSHIP_PROJECT_10291,
   FLAGSHIP_TRANSACTIONS_10291,
   generateSyntheticProjects,
+  generateProjectTransactions,
+  generateProjectDocuments,
   INITIAL_AUDIT_LOGS,
 } from '../demo/syntheticData';
 import { runFullAnomalyDetectionPipeline } from '../detection';
 import { computeRiskScore, DEFAULT_RISK_WEIGHTS, RiskWeights } from '../risk';
+import {
+  getAuthSession,
+  onAuthStateChanged,
+  fetchOrCreateUserProfile,
+  signOutUser,
+} from '../supabase/authService';
+import { DEMO_USERS } from './rbac';
 
 class AppRepository {
   private projects: ProjectEntity[] = [];
@@ -36,7 +47,17 @@ class AppRepository {
   private documents: DocumentRecord[] = [...FLAGSHIP_DOCUMENTS_10291];
   private transactions: TransactionRecord[] = [...FLAGSHIP_TRANSACTIONS_10291];
   private auditLogs: AuditLogRecord[] = [...INITIAL_AUDIT_LOGS];
-  private currentUser: UserProfile = { ...CURRENT_DEMO_USER };
+  private currentUser: UserProfile = {
+    id: DEMO_USERS.SUPER_ADMIN.id,
+    email: DEMO_USERS.SUPER_ADMIN.email,
+    full_name: DEMO_USERS.SUPER_ADMIN.full_name,
+    role: DEMO_USERS.SUPER_ADMIN.role,
+    designation: DEMO_USERS.SUPER_ADMIN.designation,
+    department: DEMO_USERS.SUPER_ADMIN.department,
+    auth_provider: 'demo',
+  };
+  private isOAuth = false;
+  private isAuthenticated = true;
   private riskWeights: RiskWeights = { ...DEFAULT_RISK_WEIGHTS };
   private initialized = false;
   private listeners: Set<() => void> = new Set();
@@ -49,6 +70,46 @@ class AppRepository {
     if (this.initialized) return;
     this.projects = generateSyntheticProjects(1050);
     this.initialized = true;
+
+    // Load persisted demo session if available
+    if (typeof window !== 'undefined') {
+      const savedSession = localStorage.getItem('mplad_sentinel_session');
+      if (savedSession) {
+        try {
+          this.currentUser = JSON.parse(savedSession);
+        } catch (e) {
+          console.warn('Failed to parse saved session, defaulting to Super Admin:', e);
+        }
+      }
+
+      // Check existing Supabase session on startup
+      getAuthSession().then(async (session) => {
+        if (session?.user) {
+          const profile = await fetchOrCreateUserProfile(session.user);
+          this.currentUser = profile;
+          this.isOAuth = true;
+          this.notify();
+        }
+      });
+
+      // Subscribe to real-time auth changes (sign-in, token refresh, sign-out)
+      onAuthStateChanged((event, session, profile) => {
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+          if (profile) {
+            this.currentUser = profile;
+            this.isOAuth = true;
+            localStorage.setItem('mplad_sentinel_session', JSON.stringify(profile));
+            this.logAudit('USER_OAUTH_LOGIN', 'USER', profile.id, {
+              provider: 'google',
+              email: profile.email,
+            });
+            this.notify();
+          }
+        } else if (event === 'SIGNED_OUT') {
+          this.logoutUser();
+        }
+      });
+    }
   }
 
   public subscribe(listener: () => void) {
@@ -66,10 +127,114 @@ class AppRepository {
     return this.currentUser;
   }
 
-  public setCurrentUserRole(role: UserProfile['role']) {
-    this.currentUser = { ...this.currentUser, role };
-    this.logAudit('USER_ROLE_SWITCHED', 'USER', this.currentUser.id, { newRole: role });
+  public isOAuthUser(): boolean {
+    return this.isOAuth;
+  }
+
+  public isUserAuthenticated(): boolean {
+    return this.isAuthenticated;
+  }
+
+  public loginWithCredentials(
+    email: string,
+    password: string
+  ): { success: boolean; error?: string; user?: UserProfile } {
+    const normalizedEmail = email.trim().toLowerCase();
+    const demoAccount = Object.values(DEMO_USERS).find(
+      (u) => u.email.toLowerCase() === normalizedEmail
+    );
+
+    if (!demoAccount || demoAccount.password !== password.trim()) {
+      return {
+        success: false,
+        error: 'Invalid credentials. Please verify your email and password, or choose a quick demo role.',
+      };
+    }
+
+    const profile: UserProfile = {
+      id: demoAccount.id,
+      email: demoAccount.email,
+      full_name: demoAccount.full_name,
+      role: demoAccount.role,
+      designation: demoAccount.designation,
+      department: demoAccount.department,
+      state_name: demoAccount.state_name || 'National',
+      district_name: demoAccount.district_name || 'National Directorate',
+      constituency_name: demoAccount.constituency_name,
+      auth_provider: 'demo',
+    };
+
+    this.currentUser = profile;
+    this.isOAuth = false;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mplad_sentinel_session', JSON.stringify(profile));
+    }
+    this.logAudit('USER_LOGIN', 'AUTH', profile.id, {
+      role: profile.role,
+      email: profile.email,
+      status: 'SUCCESS',
+      ip: '10.0.4.18 (NIC Gateway)',
+    });
     this.notify();
+    return { success: true, user: profile };
+  }
+
+  public loginAsDemoRole(role: UserRole): UserProfile {
+    const demoAccount = DEMO_USERS[role] || DEMO_USERS.SUPER_ADMIN;
+    const profile: UserProfile = {
+      id: demoAccount.id,
+      email: demoAccount.email,
+      full_name: demoAccount.full_name,
+      role: demoAccount.role,
+      designation: demoAccount.designation,
+      department: demoAccount.department,
+      state_name: demoAccount.state_name || 'National',
+      district_name: demoAccount.district_name || 'National Directorate',
+      constituency_name: demoAccount.constituency_name,
+      auth_provider: 'demo',
+    };
+
+    this.currentUser = profile;
+    this.isOAuth = false;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mplad_sentinel_session', JSON.stringify(profile));
+    }
+    this.logAudit('USER_ROLE_SWITCHED', 'AUTH', profile.id, {
+      newRole: profile.role,
+      email: profile.email,
+      method: 'DEMO_SELECTOR',
+    });
+    this.notify();
+    return profile;
+  }
+
+  public async logoutUser(): Promise<void> {
+    const prevUser = this.currentUser;
+    await signOutUser();
+    const defaultUser: UserProfile = {
+      id: DEMO_USERS.SUPER_ADMIN.id,
+      email: DEMO_USERS.SUPER_ADMIN.email,
+      full_name: DEMO_USERS.SUPER_ADMIN.full_name,
+      role: DEMO_USERS.SUPER_ADMIN.role,
+      designation: DEMO_USERS.SUPER_ADMIN.designation,
+      department: DEMO_USERS.SUPER_ADMIN.department,
+      auth_provider: 'demo',
+    };
+    this.currentUser = defaultUser;
+    this.isOAuth = false;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('mplad_sentinel_session');
+    }
+    this.logAudit('USER_LOGOUT', 'AUTH', prevUser.id, {
+      email: prevUser.email,
+      role: prevUser.role,
+      status: 'SUCCESS',
+    });
+    this.notify();
+  }
+
+  public setCurrentUserRole(role: UserProfile['role']) {
+    this.loginAsDemoRole(role);
   }
 
   public getProjects(params?: {
@@ -155,12 +320,83 @@ class AppRepository {
     return this.projects.find((p) => p.id === idOrCode || p.project_code === idOrCode);
   }
 
+  public importProjectsCSV(csvText: string): number {
+    const lines = csvText.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+    let imported = 0;
+
+    for (const line of lines) {
+      // skip header if present
+      if (line.toLowerCase().startsWith('project_code') || line.toLowerCase().startsWith('dossier')) continue;
+
+      const parts = line.split(',').map((p) => p.trim().replace(/^["']|["']$/g, ''));
+      if (parts.length >= 6) {
+        const [code, title, category, state, district, amountStr, vendor, latStr, lonStr] = parts;
+        const amount = parseFloat(amountStr) || 2500000;
+        const lat = parseFloat(latStr) || 25.4358;
+        const lon = parseFloat(lonStr) || 81.8463;
+
+        // check duplicate code
+        if (this.projects.some((p) => p.project_code === code)) continue;
+
+        const newProject: ProjectEntity = {
+          id: `proj-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          project_code: code.startsWith('MPLAD-') ? code : `MPLAD-${code}`,
+          title: title || 'Imported Community Infrastructure Asset',
+          description: `Departmental asset recorded under ${district}, ${state} jurisdiction.`,
+          category_id: 'cat-civ',
+          category_name: category || 'Public Infrastructure',
+          mp_name: 'District Parliamentary Nodal Desk',
+          constituency_id: 'const-101',
+          constituency_name: district,
+          district_id: 'dist-01',
+          district_name: district || 'Prayagraj',
+          state_id: 'st-01',
+          state_name: state || 'Uttar Pradesh',
+          implementing_agency: 'Rural Engineering Services (RES)',
+          vendor_name: vendor || 'Apex Infrastructure Ltd.',
+          status: 'SANCTIONED',
+          sanctioned_amount: amount,
+          released_amount: amount,
+          utilized_amount: Math.round(amount * 0.4),
+          sanction_date: new Date().toISOString().split('T')[0],
+          latitude: lat,
+          longitude: lon,
+          location_name: `${district} Ward Block`,
+          risk_score: Math.floor(Math.random() * 40) + 30,
+          risk_level: 'MEDIUM',
+          anomalies_count: 1,
+          open_investigations_count: 0,
+          subscores: {
+            financial: 20,
+            timeline: 10,
+            vendor: 30,
+            geographic: 15,
+            documents: 10,
+            duplicate: 0,
+          },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        this.projects.unshift(newProject);
+        imported++;
+      }
+    }
+
+    if (imported > 0) {
+      this.logAudit('BULK_CSV_IMPORTED', 'PROJECT', undefined, { recordsAdded: imported });
+      this.notify();
+    }
+
+    return imported;
+  }
+
   public getProjectAnomalies(projectId: string) {
     const project = this.getProjectById(projectId);
     if (!project) return [];
 
-    const txns = this.transactions.filter((t) => t.project_id === project.id);
-    const docs = this.documents.filter((d) => d.project_id === project.id);
+    const txns = this.getProjectTransactions(project.id);
+    const docs = this.getProjectDocuments(project.id);
     const vendor = this.vendors.find((v) => v.id === project.vendor_id);
     const constProjects = this.projects.filter(
       (p) => p.constituency_id === project.constituency_id
@@ -177,11 +413,54 @@ class AppRepository {
   }
 
   public getProjectTransactions(projectId: string): TransactionRecord[] {
-    return this.transactions.filter((t) => t.project_id === projectId);
+    const existing = this.transactions.filter((t) => t.project_id === projectId);
+    if (existing.length > 0) return existing;
+
+    const project = this.getProjectById(projectId);
+    if (!project) return [];
+
+    const generated = generateProjectTransactions(project);
+    if (generated.length > 0) {
+      this.transactions.push(...generated);
+    }
+    return generated;
   }
 
   public getProjectDocuments(projectId: string): DocumentRecord[] {
-    return this.documents.filter((d) => d.project_id === projectId);
+    const existing = this.documents.filter((d) => d.project_id === projectId);
+    if (existing.length > 0) return existing;
+
+    const project = this.getProjectById(projectId);
+    if (!project) return [];
+
+    const txns = this.getProjectTransactions(project.id);
+    const generated = generateProjectDocuments(project, txns);
+    if (generated.length > 0) {
+      this.documents.push(...generated);
+    }
+    return generated;
+  }
+
+  public addProjectDocument(
+    projectId: string,
+    docData: Omit<DocumentRecord, 'id' | 'project_id' | 'uploaded_at' | 'uploaded_by_name'>
+  ): DocumentRecord {
+    const newDoc: DocumentRecord = {
+      id: `doc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      project_id: projectId,
+      uploaded_at: new Date().toISOString(),
+      uploaded_by_name: this.currentUser.full_name,
+      ...docData,
+    };
+
+    this.documents.unshift(newDoc);
+    this.logAudit('DOCUMENT_UPLOADED', 'DOCUMENT', newDoc.id, {
+      fileName: newDoc.file_name,
+      docType: newDoc.document_type,
+      mismatchFlags: newDoc.extraction?.mismatch_flags || [],
+    });
+    this.notify();
+    return newDoc;
   }
 
   public getInvestigations(): InvestigationCase[] {
@@ -340,8 +619,17 @@ class AppRepository {
     this.auditLogs.unshift(record);
   }
 
-  public getSystemKPIs() {
-    const totalProjects = this.projects.length;
+  public getSystemKPIs(params?: { stateId?: string; riskLevel?: string }) {
+    let filteredProjects = this.projects;
+
+    if (params?.stateId && params.stateId !== 'ALL') {
+      filteredProjects = filteredProjects.filter((p) => p.state_id === params.stateId);
+    }
+    if (params?.riskLevel && params.riskLevel !== 'ALL') {
+      filteredProjects = filteredProjects.filter((p) => p.risk_level === params.riskLevel);
+    }
+
+    const totalProjects = filteredProjects.length;
     let totalSanctioned = 0;
     let totalReleased = 0;
     let totalUtilized = 0;
@@ -350,27 +638,47 @@ class AppRepository {
     let mediumCount = 0;
     let lowCount = 0;
 
-    for (const p of this.projects) {
+    const uniqueStates = new Set<string>();
+    const uniqueDistricts = new Set<string>();
+
+    for (const p of filteredProjects) {
       totalSanctioned += p.sanctioned_amount;
       totalReleased += p.released_amount;
       totalUtilized += p.utilized_amount;
+      if (p.state_id) uniqueStates.add(p.state_id);
+      if (p.district_id) uniqueDistricts.add(p.district_id);
+
       if (p.risk_level === 'CRITICAL') criticalCount++;
       else if (p.risk_level === 'HIGH') highCount++;
       else if (p.risk_level === 'MEDIUM') mediumCount++;
       else lowCount++;
     }
 
+    const activeInvestigations = this.investigations.filter((i) => {
+      if (i.status === 'RESOLVED') return false;
+      if (params?.stateId && params.stateId !== 'ALL') {
+        const prj = this.getProjectById(i.project_id);
+        return prj?.state_id === params.stateId;
+      }
+      return true;
+    });
+
+    const utilizationRate = totalReleased > 0 ? (totalUtilized / totalReleased) * 100 : 88.5;
+
     return {
       totalProjects,
       totalSanctioned,
       totalReleased,
       totalUtilized,
-      unutilizedAmount: totalReleased - totalUtilized,
+      unutilizedAmount: Math.max(0, totalReleased - totalUtilized),
+      utilizationRate,
       criticalCount,
       highCount,
       mediumCount,
       lowCount,
-      openInvestigationsCount: this.investigations.filter((i) => i.status !== 'RESOLVED').length,
+      stateCount: uniqueStates.size,
+      districtCount: uniqueDistricts.size,
+      openInvestigationsCount: activeInvestigations.length,
     };
   }
 }

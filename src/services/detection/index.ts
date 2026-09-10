@@ -7,6 +7,7 @@ import { detectDocumentAnomalies } from './document';
 import { detectDuplicateAnomalies } from './duplicate';
 
 export * from './financial';
+export * from './referenceRates';
 export * from './timeline';
 export * from './vendor';
 export * from './geographic';

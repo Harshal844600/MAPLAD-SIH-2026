@@ -576,3 +576,235 @@ export function generateSyntheticProjects(count: number = 1000): ProjectEntity[]
 
   return projects;
 }
+
+// 3. Realistic Dynamic Generators for any Project's Ledger Transactions & Archive Records
+function getDeterministicHash(str: string, salt: number = 0): number {
+  let hash = 0;
+  const combined = `${str}_${salt}`;
+  for (let i = 0; i < combined.length; i++) {
+    hash = (hash << 5) - hash + combined.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs((Math.sin(hash) * 10000) % 1);
+}
+
+export function generateProjectTransactions(project: ProjectEntity): TransactionRecord[] {
+  if (project.id === 'proj-10291' || project.project_code === 'MPLAD-10291') {
+    return [...FLAGSHIP_TRANSACTIONS_10291];
+  }
+
+  const releasedAmount = project.released_amount || 0;
+  if (releasedAmount <= 0) {
+    return [];
+  }
+
+  const vendorName = project.vendor_name || 'Designated Infrastructure Contractor';
+  const vendorId = project.vendor_id || 'ven-apex';
+  const vendorCode = vendorName.split(' ')[0].substring(0, 4).toUpperCase();
+  
+  const sanctionYear = parseInt(project.sanction_date.substring(0, 4)) || 2024;
+  const sanctionMonth = parseInt(project.sanction_date.substring(5, 7)) || 3;
+  const sanctionDay = parseInt(project.sanction_date.substring(8, 10)) || 15;
+
+  // Number of milestone payouts (2 to 4 based on amount)
+  const isHighRisk = project.risk_score >= 80;
+  const hasDuplicateRisk = project.subscores?.duplicate >= 65 || isHighRisk;
+  const count = releasedAmount > 4000000 ? 3 : 2;
+
+  const transactions: TransactionRecord[] = [];
+  const ratios = count === 3 ? [0.4, 0.35, 0.25] : [0.6, 0.4];
+
+  const milestonePurposes: Record<string, string[]> = {
+    'Roads & Bridges': [
+      '1st Milestone: Sub-grade Earthwork, Grading & Stone Base Pitching',
+      '2nd Milestone: WBM Layering, Bituminous Macadam & Concrete Pavement',
+      'Final Milestone: RCC Culvert Jointing, Drainage & Road Safety Markings',
+    ],
+    'Drinking Water & Sanitation': [
+      '1st Milestone: Deep Hydro-geological Drilling & Borewell Casing',
+      '2nd Milestone: RO Filtration Plant Installation & RCC Tank Erection',
+      'Final Milestone: Solar PV Connection, Distribution Pipeline & Community Taps',
+    ],
+    'Education & Skill Centers': [
+      '1st Milestone: Foundation Plinth, RCC Pillars & Ground Slab Laying',
+      '2nd Milestone: Brick Masonry, Smart Audio-Visual Wiring & Roof Slab',
+      'Final Milestone: Laboratory Fixtures, Interior Flooring, Paint & Handover',
+    ],
+    'Public Health Infrastructure': [
+      '1st Milestone: Civil Foundation & Structural Framework Construction',
+      '2nd Milestone: Pathology Diagnostic Lab Enclosure & Sterilization Bays',
+      'Final Milestone: Medical Gas Pipeline, Solar Backup & Final Handover',
+    ],
+    'Community Centers & Halls': [
+      '1st Milestone: Excavation, PCC Foundation & Plinth Beam Construction',
+      '2nd Milestone: RCC Superstructure Columns, Masonry Walls & Roof Truss',
+      'Final Milestone: Auditorium Acoustic Panel, Solar Rooftop & Electrical Clearing',
+    ],
+    'Renewable Energy & Lighting': [
+      '1st Milestone: Procurement of Integrated Solar PV Panels & Battery Modules',
+      '2nd Milestone: Structural Pole Erection & Micro-Grid Cabling Layout',
+      'Final Milestone: Luminaires Testing, Grid Commissioning & Inspection Clearing',
+    ],
+  };
+
+  const defaultPurposes = [
+    '1st Milestone: Ground Survey, Initial Mobilization & Base Infrastructure',
+    '2nd Milestone: Core Civil Works & Structural Construction Phase',
+    'Final Milestone: Finishing, Quality Commissioning & Final Handover',
+  ];
+
+  const purposes = milestonePurposes[project.category_name] || defaultPurposes;
+  const baseInvoiceNum = Math.floor(100 + getDeterministicHash(project.id, 1) * 899);
+
+  for (let idx = 0; idx < count; idx++) {
+    const isDuplicate = hasDuplicateRisk && idx === 1;
+    const invNumber = isDuplicate
+      ? `INV-${vendorCode}-${baseInvoiceNum}` // Identical to 1st milestone!
+      : `INV-${vendorCode}-${baseInvoiceNum + idx * 17}`;
+
+    const monthOffset = idx + 1;
+    const calcMonth = ((sanctionMonth - 1 + monthOffset) % 12) + 1;
+    const calcYear = sanctionYear + Math.floor((sanctionMonth - 1 + monthOffset) / 12);
+    const day = Math.min(28, sanctionDay + idx * 3);
+    const dateStr = `${calcYear}-${String(calcMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const invDateStr = `${calcYear}-${String(calcMonth).padStart(2, '0')}-${String(Math.max(1, day - 5)).padStart(2, '0')}`;
+
+    const portion = idx === count - 1
+      ? releasedAmount - transactions.reduce((acc, t) => acc + t.amount, 0)
+      : Math.round((releasedAmount * ratios[idx]) / 1000) * 1000;
+
+    const refHash = Math.floor(10000 + getDeterministicHash(project.id, idx + 10) * 89999);
+
+    transactions.push({
+      id: `txn-${project.id}-${idx + 1}`,
+      project_id: project.id,
+      vendor_id: vendorId,
+      vendor_name: vendorName,
+      transaction_reference: `PFMS/${calcYear}/TXN-${refHash}`,
+      amount: Math.max(10000, portion),
+      invoice_number: invNumber,
+      invoice_date: invDateStr,
+      payment_date: dateStr,
+      payment_mode: 'PFMS e-Transfer',
+      purpose: isDuplicate
+        ? `${purposes[idx] || defaultPurposes[idx]} (Duplicate Invoice Reference Attached)`
+        : purposes[idx] || defaultPurposes[idx],
+    });
+  }
+
+  return transactions;
+}
+
+export function generateProjectDocuments(
+  project: ProjectEntity,
+  transactions: TransactionRecord[] = []
+): DocumentRecord[] {
+  if (project.id === 'proj-10291' || project.project_code === 'MPLAD-10291') {
+    return [...FLAGSHIP_DOCUMENTS_10291];
+  }
+
+  const docs: DocumentRecord[] = [];
+  const cleanCode = project.project_code.replace(/[^A-Za-z0-9]/g, '_');
+  const districtClean = project.district_name.replace(/\s+/g, '_');
+  const isHighRisk = project.risk_score >= 70;
+  const isChronologyConflict = project.subscores?.timeline >= 70;
+
+  // 1. Administrative Sanction Order
+  docs.push({
+    id: `doc-${project.id}-sanction`,
+    project_id: project.id,
+    document_type: 'SANCTION_ORDER',
+    file_name: `Sanction_Order_${districtClean}_${cleanCode}_Gazette.pdf`,
+    file_size_bytes: 1250000 + Math.floor(getDeterministicHash(project.id, 101) * 400000),
+    mime_type: 'application/pdf',
+    uploaded_at: `${project.sanction_date}T10:30:00Z`,
+    uploaded_by_name: `Office of District Magistrate & Collector, ${project.district_name}`,
+    is_verified: true,
+    extraction: {
+      extracted_vendor_name: project.vendor_name,
+      extracted_amount: project.sanctioned_amount,
+      extracted_date: project.sanction_date,
+      extracted_location: project.location_name,
+      confidence: 0.98,
+    },
+  });
+
+  // 2. Inspection & Baseline Technical Survey Report
+  docs.push({
+    id: `doc-${project.id}-survey`,
+    project_id: project.id,
+    document_type: 'INSPECTION_REPORT',
+    file_name: `DPR_Technical_Sanction_and_Site_Survey_${cleanCode}.pdf`,
+    file_size_bytes: 2100000 + Math.floor(getDeterministicHash(project.id, 102) * 600000),
+    mime_type: 'application/pdf',
+    uploaded_at: `${project.start_date || project.sanction_date}T14:15:00Z`,
+    uploaded_by_name: project.implementing_agency,
+    is_verified: true,
+    extraction: {
+      extracted_vendor_name: project.vendor_name,
+      extracted_amount: project.sanctioned_amount,
+      extracted_location: `${project.latitude.toFixed(4)}° N, ${project.longitude.toFixed(4)}° E`,
+      confidence: 0.96,
+      mismatch_flags: project.subscores?.geographic >= 75 ? ['COORDINATE_PROXIMITY_BUFFER_OVERLAP_25M'] : undefined,
+    },
+  });
+
+  // 3. Running Invoices matching generated transactions
+  transactions.forEach((txn, idx) => {
+    const isFlagged = isHighRisk && (idx === 1 || txn.invoice_number?.includes('INV-'));
+    const flags: string[] = [];
+    if (idx === 1 && isHighRisk) {
+      flags.push('DUPLICATE_INVOICE_HASH_ON_PFMS');
+    }
+    if (isChronologyConflict && idx === 0) {
+      flags.push('INVOICE_PREDATES_OFFICIAL_SANCTION');
+    }
+
+    docs.push({
+      id: `doc-${project.id}-inv-${idx + 1}`,
+      project_id: project.id,
+      document_type: 'INVOICE',
+      file_name: `Invoice_${txn.invoice_number}_${cleanCode}_Milestone${idx + 1}.pdf`,
+      file_size_bytes: 840000 + Math.floor(getDeterministicHash(project.id, 200 + idx) * 350000),
+      mime_type: 'application/pdf',
+      uploaded_at: `${txn.payment_date}T11:00:00Z`,
+      uploaded_by_name: `${project.vendor_name || 'Vendor'} Billing Desk`,
+      is_verified: flags.length === 0,
+      extraction: {
+        extracted_vendor_name: txn.vendor_name,
+        extracted_amount: txn.amount,
+        extracted_date: txn.invoice_date || txn.payment_date,
+        extracted_location: project.location_name,
+        confidence: 0.95,
+        mismatch_flags: flags.length > 0 ? flags : undefined,
+      },
+    });
+  });
+
+  // 4. Completion or Utilization Certificate
+  if (project.status === 'COMPLETED' || project.utilized_amount > 0) {
+    const isCompletionInverted = isChronologyConflict && project.actual_completion_date && project.actual_completion_date < project.sanction_date;
+    docs.push({
+      id: `doc-${project.id}-uc`,
+      project_id: project.id,
+      document_type: project.status === 'COMPLETED' ? 'COMPLETION_CERTIFICATE' : 'UTILIZATION_CERTIFICATE',
+      file_name: project.status === 'COMPLETED'
+        ? `Final_Handover_Completion_Certificate_${cleanCode}.pdf`
+        : `Audited_Utilization_Certificate_GFR12C_${cleanCode}.pdf`,
+      file_size_bytes: 1450000 + Math.floor(getDeterministicHash(project.id, 301) * 300000),
+      mime_type: 'application/pdf',
+      uploaded_at: `${project.actual_completion_date || project.updated_at.substring(0, 10)}T16:45:00Z`,
+      uploaded_by_name: `Executive Engineer, ${project.implementing_agency}`,
+      is_verified: !isCompletionInverted,
+      extraction: {
+        extracted_vendor_name: project.vendor_name,
+        extracted_amount: project.utilized_amount,
+        extracted_date: project.actual_completion_date || project.updated_at.substring(0, 10),
+        confidence: 0.97,
+        mismatch_flags: isCompletionInverted ? ['COMPLETION_PREDATES_GROUND_WORK', 'CHRONOLOGICAL_INVERSION'] : undefined,
+      },
+    });
+  }
+
+  return docs;
+}

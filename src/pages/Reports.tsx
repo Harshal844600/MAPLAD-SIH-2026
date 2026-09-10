@@ -5,6 +5,9 @@ import {
   ShieldAlert,
   FileText,
   Calendar,
+  CheckCircle2,
+  FileCheck,
+  Building,
 } from 'lucide-react';
 import {
   ClassicalCard,
@@ -13,6 +16,7 @@ import {
   WaxSeal,
   VolumeHeader,
   ArchiveLabel,
+  LiveStatusPill,
 } from '../components/ui';
 import { appStore } from '../services/store/appStore';
 
@@ -30,29 +34,31 @@ export const Reports: React.FC = () => {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       {/* Action Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#4A3F35] pb-4 no-print">
-        <div>
-          <VolumeHeader
-            volume="VOLUME V"
-            title="ARCHIVE & OFFICIAL PUBLICATIONS"
-            subtitle="Formal statutory audit dossiers formatted for official parliamentary and ministerial submission."
-          />
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 light:border-slate-200 pb-4 no-print">
+        <VolumeHeader
+          volume="VOLUME V"
+          title="Archive & Official Publications"
+          subtitle="Formal statutory audit dossiers formatted for parliamentary and ministerial submission."
+        />
 
         <div className="flex items-center gap-3">
-          <div className="flex bg-[#1C1714] border border-[#4A3F35] rounded p-1 text-xs font-['Cinzel']">
+          <div className="flex bg-white/5 light:bg-slate-100 border border-white/10 light:border-slate-300 rounded-xl p-1 text-xs font-mono">
             <button
               onClick={() => setReportType('dossier')}
-              className={`px-3 py-1 font-bold rounded transition-colors ${
-                reportType === 'dossier' ? 'bg-[#251E19] text-[#C9A962] border border-[#C9A962]/40' : 'text-[#9C8B7A]'
+              className={`px-3 py-1.5 font-bold rounded-lg transition-all ${
+                reportType === 'dossier'
+                  ? 'bg-[#c9b8a0]/20 text-[#e8d5b7] light:text-slate-900 border border-[#c9b8a0]/40'
+                  : 'text-zinc-400 light:text-slate-600 hover:text-white'
               }`}
             >
               CASE DOSSIER (#10291)
             </button>
             <button
               onClick={() => setReportType('executive')}
-              className={`px-3 py-1 font-bold rounded transition-colors ${
-                reportType === 'executive' ? 'bg-[#251E19] text-[#C9A962] border border-[#C9A962]/40' : 'text-[#9C8B7A]'
+              className={`px-3 py-1.5 font-bold rounded-lg transition-all ${
+                reportType === 'executive'
+                  ? 'bg-[#c9b8a0]/20 text-[#e8d5b7] light:text-slate-900 border border-[#c9b8a0]/40'
+                  : 'text-zinc-400 light:text-slate-600 hover:text-white'
               }`}
             >
               EXECUTIVE BRIEFING
@@ -72,85 +78,88 @@ export const Reports: React.FC = () => {
 
       {/* PRINTABLE DOSSIER CONTAINER */}
       {reportType === 'dossier' ? (
-        <DossierCard className="p-8 md:p-12 space-y-8 print:border-none print:shadow-none print:p-0">
+        <DossierCard className="p-8 md:p-12 space-y-8 print:border-none print:shadow-none print:p-0 border-beam-card">
           {/* Official Letterhead */}
-          <div className="text-center border-b border-[#4A3F35] pb-6 space-y-2 relative">
+          <div className="text-center border-b border-white/10 light:border-slate-200 pb-6 space-y-2 relative">
             <div className="absolute top-0 right-0">
               <WaxSeal icon="★" size="md" />
             </div>
-            <ArchiveLabel text="CONFIDENTIAL AUDIT DOSSIER" />
-            <h3 className="text-2xl md:text-3xl font-bold font-['Cormorant_Garamond'] uppercase tracking-wider text-[#E8DFD4] mt-2">
+            <ArchiveLabel text="CONFIDENTIAL STATUTORY AUDIT DOSSIER" />
+            <h3 className="text-2xl md:text-3xl font-bold font-serif uppercase tracking-wider text-white light:text-slate-900 mt-2">
               Government of India • Ministry of Statistics & Programme Implementation
             </h3>
-            <p className="text-xs font-['Cinzel'] font-bold text-[#C9A962] tracking-widest">
+            <p className="text-xs font-mono font-bold text-[#c9b8a0] light:text-amber-800 tracking-widest">
               MPLADS FORENSIC RISK INTELLIGENCE DIVISION • CASE DOSSIER #INV-2026-10291
             </p>
           </div>
 
           {/* Project Summary Box */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-['Crimson_Pro'] p-5 bg-[#1C1714] border border-[#4A3F35] rounded">
-            <div className="space-y-1.5">
-              <p>
-                <strong className="text-[#9C8B7A] font-['Cinzel'] text-[10px] block">PROJECT CODE: </strong>
-                <span className="font-['Cinzel'] text-[#C9A962]">#{flagshipProject.project_code}</span>
-              </p>
-              <p>
-                <strong className="text-[#9C8B7A] font-['Cinzel'] text-[10px] block">PROJECT TITLE: </strong>
-                <span className="text-[#E8DFD4] font-semibold">{flagshipProject.title}</span>
-              </p>
-              <p>
-                <strong className="text-[#9C8B7A] font-['Cinzel'] text-[10px] block">CONSTITUENCY JURISDICTION: </strong>
-                {flagshipProject.constituency_name} ({flagshipProject.state_name})
-              </p>
-              <p>
-                <strong className="text-[#9C8B7A] font-['Cinzel'] text-[10px] block">MEMBER OF PARLIAMENT: </strong>
-                {flagshipProject.mp_name}
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono p-5 bg-white/[0.02] light:bg-slate-50 border border-white/10 light:border-slate-200 rounded-xl">
+            <div className="space-y-2">
+              <div>
+                <span className="text-zinc-500 light:text-slate-500 text-[10px] block">PROJECT CODE</span>
+                <span className="font-bold text-[#c9b8a0] light:text-amber-800">#{flagshipProject.project_code}</span>
+              </div>
+              <div>
+                <span className="text-zinc-500 light:text-slate-500 text-[10px] block">PROJECT TITLE</span>
+                <span className="text-white light:text-slate-900 font-sans font-semibold">{flagshipProject.title}</span>
+              </div>
+              <div>
+                <span className="text-zinc-500 light:text-slate-500 text-[10px] block">CONSTITUENCY JURISDICTION</span>
+                <span className="text-zinc-300 light:text-slate-800">{flagshipProject.constituency_name} ({flagshipProject.state_name})</span>
+              </div>
+              <div>
+                <span className="text-zinc-500 light:text-slate-500 text-[10px] block">MEMBER OF PARLIAMENT</span>
+                <span className="text-zinc-300 light:text-slate-800">{flagshipProject.mp_name}</span>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <p>
-                <strong className="text-[#9C8B7A] font-['Cinzel'] text-[10px] block">SANCTIONED OUTLAY: </strong>
-                <span className="font-['Cinzel'] text-[#E8DFD4]">₹{flagshipProject.sanctioned_amount.toLocaleString('en-IN')}</span>
-              </p>
-              <p>
-                <strong className="text-[#9C8B7A] font-['Cinzel'] text-[10px] block">DISBURSED TO DATE: </strong>
-                <span className="font-['Cinzel'] text-[#E8DFD4]">₹{flagshipProject.utilized_amount.toLocaleString('en-IN')} (100%)</span>
-              </p>
-              <p>
-                <strong className="text-[#9C8B7A] font-['Cinzel'] text-[10px] block">AWARDED CONTRACTOR: </strong>
-                {flagshipProject.vendor_name}
-              </p>
-              <p>
-                <strong className="text-[#9C8B7A] font-['Cinzel'] text-[10px] block">ALGORITHMIC RISK RATING: </strong>
-                <span className="font-['Cinzel'] font-bold text-[#8B2635]">91 / 100 (CRITICAL)</span>
-              </p>
+
+            <div className="space-y-2">
+              <div>
+                <span className="text-zinc-500 light:text-slate-500 text-[10px] block">SANCTIONED OUTLAY</span>
+                <span className="text-white light:text-slate-900 font-bold">₹{flagshipProject.sanctioned_amount.toLocaleString('en-IN')}</span>
+              </div>
+              <div>
+                <span className="text-zinc-500 light:text-slate-500 text-[10px] block">DISBURSED TO DATE</span>
+                <span className="text-white light:text-slate-900 font-bold">₹{flagshipProject.utilized_amount.toLocaleString('en-IN')} (100%)</span>
+              </div>
+              <div>
+                <span className="text-zinc-500 light:text-slate-500 text-[10px] block">AWARDED CONTRACTOR</span>
+                <span className="text-zinc-300 light:text-slate-800">{flagshipProject.vendor_name}</span>
+              </div>
+              <div>
+                <span className="text-zinc-500 light:text-slate-500 text-[10px] block">ALGORITHMIC RISK RATING</span>
+                <span className="font-bold text-red-400 light:text-red-600">91 / 100 (CRITICAL)</span>
+              </div>
             </div>
           </div>
 
           {/* Executive Findings */}
           <div className="space-y-4">
-            <h4 className="text-xl font-bold font-['Cormorant_Garamond'] text-[#E8DFD4] border-b border-[#4A3F35] pb-2">
-              1. SUMMARY OF DETECTED IRREGULARITIES
+            <h4 className="text-xl font-bold font-serif text-white light:text-slate-900 border-b border-white/10 light:border-slate-200 pb-2">
+              1. Summary of Detected Irregularities
             </h4>
-            <p className="text-base font-['Crimson_Pro'] leading-relaxed text-[#E8DFD4]">
+            <p className="text-sm leading-relaxed text-zinc-300 light:text-slate-700 font-sans">
               Algorithmic examination across the financial, chronological, and geospatial layers
               identified 5 major inconsistencies on Project #{flagshipProject.project_code}. Multi-layer
               cross-referencing indicates probable duplicate invoice disbursement and spatial overlap
               with pre-existing asset infrastructure.
             </p>
 
-            <div className="space-y-3 font-['Crimson_Pro']">
+            <div className="space-y-3">
               {anomalies.map((a, i) => (
-                <div key={a.id} className="p-4 border border-[#4A3F35] bg-[#1C1714] rounded space-y-1 text-xs">
-                  <div className="flex justify-between items-center font-['Cinzel']">
-                    <span className="font-bold text-[#E8DFD4]">
+                <div key={a.id} className="p-4 border border-white/10 light:border-slate-200 bg-white/[0.02] light:bg-slate-50 rounded-xl space-y-1.5 text-xs">
+                  <div className="flex justify-between items-center font-mono">
+                    <span className="font-bold text-white light:text-slate-900">
                       {i + 1}. [{a.rule_code}] {a.title}
                     </span>
-                    <span className="text-[#8B2635] font-bold text-[10px]">{a.severity}</span>
+                    <span className="text-red-400 light:text-red-600 font-bold text-[10px] bg-red-950/40 light:bg-red-50 px-2 py-0.5 rounded border border-red-500/30">
+                      {a.severity}
+                    </span>
                   </div>
-                  <p className="text-[#E8DFD4] text-sm">{a.description}</p>
-                  <p className="text-[#9C8B7A] italic text-xs pt-1">
-                    <strong className="text-[#C9A962] font-['Cinzel'] text-[10px]">EVIDENCE REF: </strong> {a.evidence_summary}
+                  <p className="text-zinc-300 light:text-slate-700 font-sans">{a.description}</p>
+                  <p className="text-zinc-400 light:text-slate-500 text-xs pt-1 font-mono">
+                    <strong className="text-[#c9b8a0] light:text-amber-800">EVIDENCE REF: </strong> {a.evidence_summary}
                   </p>
                 </div>
               ))}
@@ -159,63 +168,60 @@ export const Reports: React.FC = () => {
 
           {/* Investigator Directives */}
           <div className="space-y-3">
-            <h4 className="text-xl font-bold font-['Cormorant_Garamond'] text-[#E8DFD4] border-b border-[#4A3F35] pb-2">
-              2. INVESTIGATOR OFFICER DIRECTIVES & ACTIONS
+            <h4 className="text-xl font-bold font-serif text-white light:text-slate-900 border-b border-white/10 light:border-slate-200 pb-2">
+              2. Investigator Officer Directives & Statutory Actions
             </h4>
-            <div className="p-4 bg-[#2A1D1A] border border-[#8B2635] rounded text-sm font-['Crimson_Pro'] space-y-2 text-[#E8DFD4]">
+            <div className="p-5 bg-red-950/20 light:bg-red-50/70 border border-red-500/30 rounded-xl text-xs space-y-2.5 text-zinc-200 light:text-slate-800">
               <p>
-                <strong className="text-[#C9A962] font-['Cinzel'] text-xs">DIRECTIVE 1: </strong> Direct DM Prayagraj to freeze subsequent fund drawdowns for
-                RES Division Project #10291.
+                <strong className="text-[#c9b8a0] light:text-amber-800 font-mono">DIRECTIVE 1: </strong> Direct District Magistrate Prayagraj to freeze subsequent fund drawdowns for RES Division Project #10291.
               </p>
               <p>
-                <strong className="text-[#C9A962] font-['Cinzel'] text-xs">DIRECTIVE 2: </strong> Issue formal summon to Apex Infrastructure & Heavy Works Ltd.
-                regarding duplicate clearing of Invoice #INV-APX-884.
+                <strong className="text-[#c9b8a0] light:text-amber-800 font-mono">DIRECTIVE 2: </strong> Issue formal summon to Apex Infrastructure & Heavy Works Ltd. regarding duplicate clearing of Invoice #INV-APX-884.
               </p>
               <p>
-                <strong className="text-[#C9A962] font-['Cinzel'] text-xs">DIRECTIVE 3: </strong> Mobilize State Quality Monitor (SQM) for physical verification
-                survey at Gram Panchayat Saidabad.
+                <strong className="text-[#c9b8a0] light:text-amber-800 font-mono">DIRECTIVE 3: </strong> Mobilize State Quality Monitor (SQM) for physical verification survey at Gram Panchayat Saidabad.
               </p>
             </div>
           </div>
 
           {/* Sign-Off Block */}
-          <div className="pt-8 border-t border-[#4A3F35] flex justify-between items-end text-xs font-['Crimson_Pro'] text-[#9C8B7A]">
+          <div className="pt-8 border-t border-white/10 light:border-slate-200 flex justify-between items-end text-xs font-mono text-zinc-400 light:text-slate-500">
             <div>
               <p>Date of Report Generation: {new Date().toLocaleDateString('en-IN')}</p>
-              <p>System Verifier: Sentinel Risk Engine v1.4.2</p>
+              <p>System Verifier: Sentinel Forensic Engine v2.0</p>
             </div>
             <div className="text-right space-y-1">
-              <div className="h-10 border-b border-[#4A3F35] w-48 ml-auto" />
-              <p className="font-['Cormorant_Garamond'] font-bold text-base text-[#E8DFD4]">Dr. Rameshwar Sharma, IAS</p>
-              <p className="font-['Cinzel'] text-[10px] text-[#9C8B7A]">Principal Director of Audits & Inspections</p>
+              <div className="h-10 border-b border-white/20 light:border-slate-300 w-48 ml-auto" />
+              <p className="font-serif font-bold text-base text-white light:text-slate-900">Dr. Rameshwar Sharma, IAS</p>
+              <p className="font-mono text-[10px] text-zinc-500 light:text-slate-500">Principal Director of Audits & Inspections</p>
             </div>
           </div>
         </DossierCard>
       ) : (
         /* EXECUTIVE SUMMARY VIEW */
-        <DossierCard className="p-8 space-y-6">
-          <div className="text-center border-b border-[#4A3F35] pb-4">
+        <DossierCard className="p-8 space-y-6 border-beam-card">
+          <div className="text-center border-b border-white/10 light:border-slate-200 pb-4">
             <ArchiveLabel text="STATISTICAL BRIEFING" />
-            <h3 className="text-2xl font-bold font-['Cormorant_Garamond'] uppercase text-[#E8DFD4] mt-1">
+            <h3 className="text-2xl font-bold font-serif uppercase text-white light:text-slate-900 mt-1">
               National MPLADS Implementation Briefing
             </h3>
-            <p className="text-xs font-['Cinzel'] text-[#9C8B7A] tracking-wider">QUARTERLY AUDIT CYCLE • ALL SCHEME DATA</p>
+            <p className="text-xs font-mono text-zinc-400 light:text-slate-500 tracking-wider">QUARTERLY AUDIT CYCLE • ALL SCHEME DATA</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center font-['Cinzel']">
-            <div className="p-5 bg-[#1C1714] border border-[#4A3F35] rounded">
-              <span className="text-xs text-[#9C8B7A] tracking-wider block">TOTAL AUDITED WORKS</span>
-              <p className="text-3xl font-bold text-[#E8DFD4] font-['Cormorant_Garamond'] mt-1">{kpis.totalProjects}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center font-mono">
+            <div className="p-6 bg-white/[0.02] light:bg-slate-50 border border-white/10 light:border-slate-200 rounded-xl">
+              <span className="text-xs text-zinc-400 light:text-slate-500 tracking-wider block">TOTAL AUDITED WORKS</span>
+              <p className="text-3xl font-bold text-white light:text-slate-900 font-serif mt-1">{kpis.totalProjects}</p>
             </div>
-            <div className="p-5 bg-[#1C1714] border border-[#4A3F35] rounded">
-              <span className="text-xs text-[#9C8B7A] tracking-wider block">SANCTIONED OUTLAY</span>
-              <p className="text-3xl font-bold text-[#C9A962] font-['Cormorant_Garamond'] mt-1">
+            <div className="p-6 bg-white/[0.02] light:bg-slate-50 border border-white/10 light:border-slate-200 rounded-xl">
+              <span className="text-xs text-zinc-400 light:text-slate-500 tracking-wider block">SANCTIONED OUTLAY</span>
+              <p className="text-3xl font-bold text-[#c9b8a0] light:text-amber-800 font-serif mt-1">
                 ₹{(kpis.totalSanctioned / 10000000).toFixed(1)} Cr
               </p>
             </div>
-            <div className="p-5 bg-[#2A1D1A] border border-[#8B2635] rounded">
-              <span className="text-xs text-[#8B2635] tracking-wider block">CRITICAL RISK ASSETS</span>
-              <p className="text-3xl font-bold text-[#8B2635] font-['Cormorant_Garamond'] mt-1">{kpis.criticalCount}</p>
+            <div className="p-6 bg-red-950/20 light:bg-red-50 border border-red-500/30 rounded-xl">
+              <span className="text-xs text-red-400 light:text-red-600 tracking-wider block">CRITICAL RISK ASSETS</span>
+              <p className="text-3xl font-bold text-red-400 light:text-red-600 font-serif mt-1">{kpis.criticalCount}</p>
             </div>
           </div>
         </DossierCard>
@@ -223,4 +229,3 @@ export const Reports: React.FC = () => {
     </div>
   );
 };
-

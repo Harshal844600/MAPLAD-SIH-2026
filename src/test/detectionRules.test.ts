@@ -40,4 +40,34 @@ describe('Multi-Layer Anomaly Detection Engines', () => {
     expect(geoAnomaly).toBeDefined();
     expect(geoAnomaly?.severity).toBe('CRITICAL');
   });
+
+  it('should compute variable, category-tailored standard reference rates for FIN-COST-001', () => {
+    // 1. Flagship case: Community Center sanctioned for 48.5 Lakhs vs 22 Lakhs benchmark
+    const flagshipAnomalies = detectFinancialAnomalies(
+      FLAGSHIP_PROJECT_10291,
+      FLAGSHIP_TRANSACTIONS_10291
+    );
+    const flagshipCostAnomaly = flagshipAnomalies.find((a) => a.rule_code === 'FIN-COST-001');
+    expect(flagshipCostAnomaly).toBeDefined();
+    expect(flagshipCostAnomaly?.description).toContain('22,00,000');
+    expect(flagshipCostAnomaly?.severity).toBe('CRITICAL');
+
+    // 2. High-outlay Roads & Bridges project
+    const roadProject = {
+      ...FLAGSHIP_PROJECT_10291,
+      id: 'proj-road-991',
+      project_code: 'MPLAD-ROAD-991',
+      category_name: 'Roads & Bridges',
+      sanctioned_amount: 8500000,
+      risk_score: 88,
+      risk_level: 'CRITICAL' as const,
+      subscores: { ...FLAGSHIP_PROJECT_10291.subscores, financial: 90 },
+    };
+    const roadAnomalies = detectFinancialAnomalies(roadProject);
+    const roadCostAnomaly = roadAnomalies.find((a) => a.rule_code === 'FIN-COST-001');
+    expect(roadCostAnomaly).toBeDefined();
+    // Benchmark is variable and dynamically calculated (not static 25,00,000)
+    expect(roadCostAnomaly?.description).not.toContain('₹25,00,000');
+    expect(roadCostAnomaly?.description).toContain('Roads & Bridges');
+  });
 });

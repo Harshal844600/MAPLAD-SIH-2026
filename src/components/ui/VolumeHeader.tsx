@@ -1,5 +1,4 @@
 import React from 'react';
-import { OrnateDivider } from './OrnateDivider';
 
 interface VolumeHeaderProps {
   volume?: string;
@@ -17,19 +16,19 @@ export const VolumeHeader: React.FC<VolumeHeaderProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`space-y-2 border-b border-[#4A3F35] pb-4 ${className}`}>
+    <div className={`space-y-2 border-b border-white/10 light:border-slate-200 pb-5 ${className}`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-['Cinzel'] font-bold tracking-[0.25em] text-[#C9A962] uppercase">
+            <span className="text-xs font-mono font-bold tracking-widest text-[#c9b8a0] light:text-[#78350F] uppercase px-2.5 py-0.5 rounded-full bg-[#a78b71]/10 light:bg-amber-100/80 border border-[#a78b71]/20 light:border-amber-300">
               {volume}
             </span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold font-['Cormorant_Garamond'] text-[#E8DFD4] tracking-tight mt-0.5">
+          <h2 className="text-3xl sm:text-4xl font-semibold font-['Playfair_Display'] text-white light:text-slate-900 tracking-tight mt-2">
             {title}
           </h2>
           {subtitle && (
-            <p className="text-sm sm:text-base text-[#9C8B7A] font-['Crimson_Pro'] italic mt-0.5">
+            <p className="text-sm sm:text-base text-gray-400 light:text-slate-600 font-['Inter'] mt-1 leading-relaxed">
               {subtitle}
             </p>
           )}

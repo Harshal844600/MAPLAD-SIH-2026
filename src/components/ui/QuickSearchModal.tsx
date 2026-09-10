@@ -1,49 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Compass, AlertTriangle, Shield, FileText, Bot, MapPin, X, ArrowRight } from 'lucide-react';
-import { CornerFlourish } from './CornerFlourish';
+import { createPortal } from 'react-dom';
+import { Search, X, Shield, MapPin, Bot, FileText, ArrowRight, Compass } from 'lucide-react';
+
+interface QuickSearchModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
 interface SearchItem {
   id: string;
   title: string;
   subtitle: string;
-  category: 'NAVIGATION' | 'PROJECT' | 'INVESTIGATION' | 'INTELLIGENCE';
+  category: 'PROJECT' | 'NAVIGATION' | 'INVESTIGATION' | 'INTELLIGENCE';
   href: string;
-  riskScore?: number;
   icon: React.ReactNode;
+  riskScore?: number;
 }
 
 const SEARCH_DATABASE: SearchItem[] = [
   {
     id: 'nav-dashboard',
-    title: 'Command Center Overview',
-    subtitle: 'Institutional executive metrics and fund dispatch overview',
+    title: 'Command Center & Real-Time Overview',
+    subtitle: 'High-level risk distribution, KPIs & priority forensic queue',
     category: 'NAVIGATION',
     href: '#/dashboard',
-    icon: <Shield className="w-4 h-4 text-[#C9A962]" strokeWidth={1.5} />,
+    icon: <Compass className="w-4 h-4 text-[#a78b71]" strokeWidth={1.5} />,
   },
   {
     id: 'nav-projects',
-    title: 'Master Project Registry',
-    subtitle: 'Full repository of MPLAD sanctioned works & status dossiers',
+    title: 'Project Ledger Archive',
+    subtitle: 'Search & filter across 1,050 registered MPLADS works',
     category: 'NAVIGATION',
     href: '#/projects',
-    icon: <FileText className="w-4 h-4 text-[#C9A962]" strokeWidth={1.5} />,
-  },
-  {
-    id: 'nav-risk',
-    title: 'Explainable Risk Matrix',
-    subtitle: '7-Layer forensic anomaly detection & scoring engine',
-    category: 'INTELLIGENCE',
-    href: '#/risk-intelligence',
-    icon: <AlertTriangle className="w-4 h-4 text-[#8B2635]" strokeWidth={1.5} />,
+    icon: <FileText className="w-4 h-4 text-[#a78b71]" strokeWidth={1.5} />,
   },
   {
     id: 'nav-map',
     title: 'Geospatial Cartography',
-    subtitle: 'Interactive PostGIS constituency mapping & asset verification',
+    subtitle: 'Interactive PostGIS constituency mapping & asset proximity verification',
     category: 'NAVIGATION',
     href: '#/map',
-    icon: <MapPin className="w-4 h-4 text-[#C9A962]" strokeWidth={1.5} />,
+    icon: <MapPin className="w-4 h-4 text-[#a78b71]" strokeWidth={1.5} />,
   },
   {
     id: 'nav-investigations',
@@ -51,105 +48,98 @@ const SEARCH_DATABASE: SearchItem[] = [
     subtitle: 'CAG audit dossiers, evidentiary timelines & inquiry logs',
     category: 'INVESTIGATION',
     href: '#/investigations',
-    icon: <Shield className="w-4 h-4 text-[#8B2635]" strokeWidth={1.5} />,
+    icon: <Shield className="w-4 h-4 text-rose-500" strokeWidth={1.5} />,
   },
   {
     id: 'nav-ai',
     title: 'Sentinel AI Intelligence Copilot',
-    subtitle: 'Groq Llama 3 70B forensic audit reasoning assistant',
+    subtitle: 'Groq Llama 3.3 70B forensic audit reasoning assistant',
     category: 'INTELLIGENCE',
-    href: '#/ai-copilot',
-    icon: <Bot className="w-4 h-4 text-[#C9A962]" strokeWidth={1.5} />,
+    href: '#/sentinel-ai',
+    icon: <Bot className="w-4 h-4 text-[#a78b71]" strokeWidth={1.5} />,
   },
   {
-    id: 'nav-ocr',
-    title: 'Document OCR & Forensic Extractor',
-    subtitle: 'Automated invoice, sanction order & utilization certificate OCR',
-    category: 'INTELLIGENCE',
-    href: '#/ocr',
-    icon: <FileText className="w-4 h-4 text-[#C9A962]" strokeWidth={1.5} />,
-  },
-  {
-    id: 'nav-analytics',
-    title: 'Cross-Constituency Analytics',
-    subtitle: 'Longitudinal expenditure velocity & anomaly distribution',
+    id: 'nav-documents',
+    title: 'Document OCR Archive',
+    subtitle: 'Extract & verify utilization certificates and contractor invoices',
     category: 'NAVIGATION',
-    href: '#/analytics',
-    icon: <Compass className="w-4 h-4 text-[#C9A962]" strokeWidth={1.5} />,
-  },
-  {
-    id: 'nav-reports',
-    title: 'Audit Report Generator',
-    subtitle: 'Institutional PDF synthesis & parliamentary submission briefs',
-    category: 'NAVIGATION',
-    href: '#/reports',
-    icon: <FileText className="w-4 h-4 text-[#C9A962]" strokeWidth={1.5} />,
+    href: '#/documents',
+    icon: <FileText className="w-4 h-4 text-[#a78b71]" strokeWidth={1.5} />,
   },
   {
     id: 'proj-10291',
-    title: 'MPLAD-10291 — Community Center Phulpur',
-    subtitle: 'CRITICAL RISK (91/100) — Vendor Collusion & Duplicate Invoicing',
+    title: 'Construction of RCC Drain Saidabad Ward 4',
+    subtitle: 'MPLAD-10291 • Prayagraj, Uttar Pradesh • 120% SoR Inflation & Duplicate Payout',
     category: 'PROJECT',
+    href: '#/projects/MPLAD-10291',
+    icon: <FileText className="w-4 h-4 text-rose-400" strokeWidth={1.5} />,
     riskScore: 91,
-    href: '#/projects/proj-001',
-    icon: <AlertTriangle className="w-4 h-4 text-[#8B2635]" strokeWidth={1.5} />,
   },
   {
-    id: 'proj-10482',
-    title: 'MPLAD-10482 — Solar Installation High School',
-    subtitle: 'HIGH RISK (78/100) — Cost Inflation & Rapid Tranche Drawdowns',
+    id: 'proj-10471',
+    title: 'Panchayat Bhavan Extension & Citizen Service Kendra',
+    subtitle: 'MPLAD-10471 • Indore, Madhya Pradesh • Ghost Asset GPS Overlap',
     category: 'PROJECT',
-    riskScore: 78,
-    href: '#/projects/proj-002',
-    icon: <AlertTriangle className="w-4 h-4 text-[#C9A962]" strokeWidth={1.5} />,
+    href: '#/projects/MPLAD-10471',
+    icon: <FileText className="w-4 h-4 text-rose-400" strokeWidth={1.5} />,
+    riskScore: 97,
   },
   {
-    id: 'proj-10901',
-    title: 'MPLAD-10901 — Rural Drinking Water Tank',
-    subtitle: 'MEDIUM RISK (42/100) — Minor Milestone Discrepancy',
+    id: 'proj-10790',
+    title: 'Construction of Public Health Clinic Sub-center',
+    subtitle: 'MPLAD-10790 • Gorakhpur, Uttar Pradesh • Blacklisted Contractor Engagement',
     category: 'PROJECT',
-    riskScore: 42,
-    href: '#/projects/proj-003',
-    icon: <FileText className="w-4 h-4 text-[#9C8B7A]" strokeWidth={1.5} />,
+    href: '#/projects/MPLAD-10790',
+    icon: <FileText className="w-4 h-4 text-rose-400" strokeWidth={1.5} />,
+    riskScore: 97,
   },
   {
-    id: 'case-inv-001',
-    title: 'INV-2026-088 — Phulpur Community Center Audit',
-    subtitle: 'CAG Formal Inquiry Dossier with 14 verified evidence artifacts',
+    id: 'inv-101',
+    title: 'Active Case: Phulpur Drain Duplicate Payout & Invoice Recycling',
+    subtitle: 'INSP-2026-0891 • Assigned to Super Administrator',
     category: 'INVESTIGATION',
-    href: '#/investigations/INV-2026-088',
-    icon: <Shield className="w-4 h-4 text-[#8B2635]" strokeWidth={1.5} />,
-  }
+    href: '#/investigations/inv-case-101',
+    icon: <Shield className="w-4 h-4 text-amber-400" strokeWidth={1.5} />,
+    riskScore: 91,
+  },
 ];
-
-interface QuickSearchModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
 
 export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        if (isOpen) {
-          onClose();
-        } else {
-          // Open handled outside or via trigger
-        }
-      } else if (e.key === 'Escape' && isOpen) {
+        if (isOpen) onClose();
+      }
+      if (!isOpen) return;
+
+      if (e.key === 'Escape') {
         onClose();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev + 1) % filtered.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev - 1 + filtered.length) % filtered.length);
+      } else if (e.key === 'Enter' && filtered[selectedIndex]) {
+        e.preventDefault();
+        handleSelect(filtered[selectedIndex].href);
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, selectedIndex]);
 
   const filtered = SEARCH_DATABASE.filter((item) => {
-    if (!query.trim()) return true;
     const q = query.toLowerCase();
     return (
       item.title.toLowerCase().includes(q) ||
@@ -163,19 +153,20 @@ export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({ isOpen, onCl
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-[#140F0D]/80 backdrop-blur-sm animate-in fade-in duration-200">
+  const modalMarkup = (
+    <div
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-20 px-4 bg-black/70 light:bg-slate-900/30 backdrop-blur-md light:backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={onClose}
+    >
       <div 
-        className="w-full max-w-2xl bg-[#251E19] border border-[#C9A962]/50 rounded-[4px] shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden relative"
+        className="w-full max-w-2xl bg-[#121212] light:bg-white border border-white/15 light:border-slate-200 rounded-[24px] shadow-[0_25px_60px_rgba(0,0,0,0.8)] light:shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden relative animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <CornerFlourish size="md" color="#C9A962" />
-
         {/* Search Header */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#4A3F35] bg-[#1C1714]">
-          <Search className="w-5 h-5 text-[#C9A962]" strokeWidth={1.5} />
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10 light:border-slate-200 bg-white/[0.02] light:bg-slate-50">
+          <Search className="w-5 h-5 text-[#c9b8a0] light:text-[#8C735D]" strokeWidth={1.75} />
           <input
             type="text"
             value={query}
@@ -183,26 +174,26 @@ export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({ isOpen, onCl
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
-            placeholder="Search archival registry, projects (e.g. 10291), intelligence volumes or cases..."
-            className="w-full bg-transparent border-none text-[#E8DFD4] placeholder-[#9C8B7A] font-['Crimson_Pro'] text-base focus:outline-none"
+            placeholder="Search dossiers, projects (e.g. 10291), anomaly codes..."
+            className="w-full bg-transparent border-none text-white light:text-slate-900 placeholder:text-gray-500 font-['Inter'] text-base focus:outline-none"
             autoFocus
           />
           <button
             onClick={onClose}
-            className="p-1 text-[#9C8B7A] hover:text-[#C9A962] rounded transition-colors"
+            className="p-1.5 text-gray-400 light:text-slate-500 hover:text-white light:hover:text-slate-900 rounded-full transition-colors cursor-pointer"
             title="Close search"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Results List */}
-        <div className="max-h-96 overflow-y-auto p-2 divide-y divide-[#4A3F35]/30">
+        <div className="max-h-96 overflow-y-auto p-3 space-y-1">
           {filtered.length === 0 ? (
-            <div className="py-12 text-center text-[#9C8B7A] font-['Crimson_Pro']">
-              <Compass className="w-8 h-8 mx-auto mb-2 text-[#C9A962]/40 animate-spin" strokeWidth={1.5} />
+            <div className="py-12 text-center text-gray-400 light:text-slate-500 font-['Inter']">
+              <Compass className="w-8 h-8 mx-auto mb-2 text-[#a78b71]/40 animate-spin" strokeWidth={1.5} />
               <p className="text-sm">No corresponding archival entries found in index.</p>
-              <p className="text-xs text-[#9C8B7A]/70 mt-1">Try searching "Phulpur", "MPLAD-10291", "Risk", or "CAG".</p>
+              <p className="text-xs text-gray-500 mt-1">Try searching "Phulpur", "MPLAD-10291", "Risk", or "CAG".</p>
             </div>
           ) : (
             filtered.map((item, index) => {
@@ -212,24 +203,26 @@ export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({ isOpen, onCl
                   key={item.id}
                   onClick={() => handleSelect(item.href)}
                   onMouseEnter={() => setSelectedIndex(index)}
-                  className={`flex items-center justify-between p-3 rounded-[2px] cursor-pointer transition-colors ${
-                    isSelected ? 'bg-[#3D332B] border-l-2 border-[#C9A962]' : 'hover:bg-[#2A231D]'
+                  className={`flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all ${
+                    isSelected
+                      ? 'bg-[#a78b71]/15 light:bg-[#8C735D]/10 border border-[#a78b71]/30 light:border-[#8C735D]/20'
+                      : 'hover:bg-white/5 light:hover:bg-slate-100 border border-transparent'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded bg-[#1C1714] border border-[#4A3F35]">
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-2.5 rounded-xl bg-white/[0.04] light:bg-white border border-white/10 light:border-slate-200">
                       {item.icon}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-['Cinzel'] tracking-widest px-1.5 py-0.5 rounded bg-[#1C1714] text-[#C9A962] border border-[#4A3F35]">
+                        <span className="text-[10px] font-mono font-bold tracking-widest px-2 py-0.5 rounded-full bg-black/40 light:bg-slate-100 text-[#c9b8a0] light:text-[#8C735D] border border-white/10 light:border-slate-200">
                           {item.category}
                         </span>
-                        <h4 className="text-sm font-['Cinzel'] font-bold text-[#E8DFD4]">
+                        <h4 className="text-sm font-semibold font-['Playfair_Display'] text-white light:text-slate-900">
                           {item.title}
                         </h4>
                       </div>
-                      <p className="text-xs text-[#9C8B7A] font-['Crimson_Pro'] mt-0.5">
+                      <p className="text-xs text-gray-400 light:text-slate-600 font-['Inter'] mt-0.5">
                         {item.subtitle}
                       </p>
                     </div>
@@ -237,15 +230,15 @@ export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({ isOpen, onCl
 
                   <div className="flex items-center gap-2">
                     {item.riskScore !== undefined && (
-                      <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded border ${
+                      <span className={`px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold border ${
                         item.riskScore >= 75
-                          ? 'border-[#8B2635] bg-[#8B2635]/20 text-[#fca5a5]'
-                          : 'border-[#C9A962] bg-[#C9A962]/20 text-[#C9A962]'
+                          ? 'border-rose-500/40 bg-rose-950/30 text-rose-300'
+                          : 'border-[#a78b71]/40 bg-[#a78b71]/20 text-[#e8d5b7]'
                       }`}>
                         {item.riskScore}/100
                       </span>
                     )}
-                    <ArrowRight className="w-4 h-4 text-[#9C8B7A]" strokeWidth={1.5} />
+                    <ArrowRight className="w-4 h-4 text-gray-400 light:text-slate-500" strokeWidth={1.5} />
                   </div>
                 </div>
               );
@@ -254,14 +247,16 @@ export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({ isOpen, onCl
         </div>
 
         {/* Footer shortcuts */}
-        <div className="px-4 py-2 bg-[#1C1714] border-t border-[#4A3F35] flex items-center justify-between text-[11px] font-['Cinzel'] text-[#9C8B7A]">
+        <div className="px-5 py-2.5 bg-black/40 light:bg-slate-50 border-t border-white/10 light:border-slate-200 flex items-center justify-between text-[11px] font-mono text-gray-400 light:text-slate-500">
           <div className="flex items-center gap-3">
-            <span>Navigation: <kbd className="px-1 py-0.5 bg-[#251E19] border border-[#4A3F35] rounded text-[10px] text-[#E8DFD4]">↑</kbd> <kbd className="px-1 py-0.5 bg-[#251E19] border border-[#4A3F35] rounded text-[10px] text-[#E8DFD4]">↓</kbd></span>
-            <span>Select: <kbd className="px-1 py-0.5 bg-[#251E19] border border-[#4A3F35] rounded text-[10px] text-[#E8DFD4]">↵</kbd></span>
+            <span>Navigation: <kbd className="px-1.5 py-0.5 bg-white/5 light:bg-white border border-white/10 light:border-slate-200 rounded text-[10px]">↑</kbd> <kbd className="px-1.5 py-0.5 bg-white/5 light:bg-white border border-white/10 light:border-slate-200 rounded text-[10px]">↓</kbd></span>
+            <span>Select: <kbd className="px-1.5 py-0.5 bg-white/5 light:bg-white border border-white/10 light:border-slate-200 rounded text-[10px]">↵</kbd></span>
           </div>
-          <span>Close: <kbd className="px-1 py-0.5 bg-[#251E19] border border-[#4A3F35] rounded text-[10px] text-[#E8DFD4]">ESC</kbd></span>
+          <span>Close: <kbd className="px-1.5 py-0.5 bg-white/5 light:bg-white border border-white/10 light:border-slate-200 rounded text-[10px]">ESC</kbd></span>
         </div>
       </div>
     </div>
   );
+
+  return createPortal(modalMarkup, document.body);
 };

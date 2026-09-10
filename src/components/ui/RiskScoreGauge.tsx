@@ -18,13 +18,18 @@ export const RiskScoreGauge: React.FC<RiskScoreGaugeProps> = ({
 
   const radiusVal = 38;
   const circumference = 2 * Math.PI * radiusVal;
-  const strokeDashoffset = circumference - (score / 100) * circumference * 0.75;
+  // 270 degree arc (3/4 circle)
+  const arcLength = circumference * 0.75;
+  const strokeDashoffset = arcLength - (Math.min(Math.max(score, 0), 100) / 100) * arcLength;
 
   const dim = {
-    sm: { width: 70, height: 70, stroke: 4, fontSize: 'text-xl', labelSize: 'text-[9px]' },
-    md: { width: 120, height: 120, stroke: 6, fontSize: 'text-3xl', labelSize: 'text-xs' },
-    lg: { width: 170, height: 170, stroke: 8, fontSize: 'text-5xl', labelSize: 'text-sm' },
+    sm: { width: 80, height: 80, stroke: 5, fontSize: 'text-xl', labelSize: 'text-[9px]' },
+    md: { width: 130, height: 130, stroke: 7, fontSize: 'text-3xl', labelSize: 'text-xs' },
+    lg: { width: 180, height: 180, stroke: 9, fontSize: 'text-5xl', labelSize: 'text-sm' },
   }[size];
+
+  // Dynamic gradient IDs for Risk color
+  const gradientId = `gauge-gradient-${score >= 80 ? 'critical' : score >= 60 ? 'high' : score >= 30 ? 'medium' : 'low'}`;
 
   return (
     <div className={`relative flex flex-col items-center justify-center ${className}`}>
@@ -33,41 +38,61 @@ export const RiskScoreGauge: React.FC<RiskScoreGaugeProps> = ({
           width={dim.width}
           height={dim.height}
           viewBox="0 0 100 100"
-          className="transform -rotate-135"
+          className="transform -rotate-135 drop-shadow-[0_0_12px_rgba(0,0,0,0.5)]"
         >
+          <defs>
+            <linearGradient id="gauge-gradient-low" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#34D399" />
+              <stop offset="100%" stopColor="#10B981" />
+            </linearGradient>
+            <linearGradient id="gauge-gradient-medium" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FBBF24" />
+              <stop offset="100%" stopColor="#F59E0B" />
+            </linearGradient>
+            <linearGradient id="gauge-gradient-high" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FB923C" />
+              <stop offset="100%" stopColor="#F97316" />
+            </linearGradient>
+            <linearGradient id="gauge-gradient-critical" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#F87171" />
+              <stop offset="100%" stopColor="#EF4444" />
+            </linearGradient>
+          </defs>
+
           {/* Background track */}
           <circle
             cx="50"
             cy="50"
             r={radiusVal}
             fill="none"
-            stroke="#3D332B"
+            stroke="rgba(255, 255, 255, 0.08)"
             strokeWidth={dim.stroke}
             strokeDasharray={circumference}
             strokeDashoffset={circumference * 0.25}
             strokeLinecap="round"
           />
-          {/* Risk fill arc */}
+
+          {/* Glowing active arc fill */}
           <circle
             cx="50"
             cy="50"
             r={radiusVal}
             fill="none"
-            stroke={score >= 80 ? '#8B2635' : score >= 60 ? '#d97706' : '#C9A962'}
+            stroke={`url(#${gradientId})`}
             strokeWidth={dim.stroke}
             strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
+            strokeDashoffset={circumference * 0.25 + strokeDashoffset}
             strokeLinecap="round"
-            className="transition-all duration-700 ease-out"
+            className="transition-all duration-1000 ease-out"
           />
         </svg>
 
-        {/* Center Score Text with AnimatedCounter */}
+        {/* Center Numeric Readout in JetBrains Mono / Inter */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className={`font-['Cormorant_Garamond'] font-bold ${dim.fontSize} leading-none text-[#E8DFD4]`}>
+          <span className={`font-mono font-bold ${dim.fontSize} leading-none text-white tracking-tight`}>
             {score}
           </span>
-          <span className="text-[10px] uppercase tracking-[0.2em] font-['Cinzel'] text-[#9C8B7A] mt-0.5">
+          <span className="text-[10px] uppercase tracking-widest font-mono text-gray-400 mt-1">
             / 100
           </span>
         </div>
@@ -75,7 +100,9 @@ export const RiskScoreGauge: React.FC<RiskScoreGaugeProps> = ({
 
       {showLabel && (
         <span
-          className={`mt-2 font-['Cinzel'] font-bold uppercase tracking-[0.2em] ${dim.labelSize} px-2.5 py-0.5 border rounded-[2px] ${config.bg} ${config.border} ${config.text} ${score >= 80 ? 'animate-pulse' : ''}`}
+          className={`mt-2.5 font-mono font-semibold uppercase tracking-wider ${dim.labelSize} px-3 py-0.5 rounded-full border backdrop-blur-md ${config.bg} ${config.border} ${config.text} ${
+            score >= 80 ? 'animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.4)]' : ''
+          }`}
         >
           {level}
         </span>

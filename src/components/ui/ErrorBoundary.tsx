@@ -2,7 +2,6 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertOctagon, RotateCcw } from 'lucide-react';
 import { ClassicalCard } from './ClassicalCard';
 import { ClassicalButton } from './ClassicalButton';
-import { CornerFlourish } from './CornerFlourish';
 
 interface Props {
   children: ReactNode;
@@ -36,17 +35,16 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-[50vh] flex items-center justify-center p-6">
           <ClassicalCard
             variant="red"
-            className="max-w-lg w-full text-center py-8 px-6 space-y-4 relative"
+            className="max-w-lg w-full text-center py-8 px-6 space-y-4 relative border-beam-card border-red-500/40"
           >
-            <CornerFlourish size="md" color="#8B2635" />
-            <div className="w-14 h-14 mx-auto mb-2 flex items-center justify-center border border-[#8B2635] rounded-full bg-[#1C1714] text-[#fca5a5]">
+            <div className="w-14 h-14 mx-auto mb-2 flex items-center justify-center border border-red-500/40 rounded-2xl bg-red-950/40 text-red-400">
               <AlertOctagon className="w-6 h-6" strokeWidth={1.5} />
             </div>
-            <h3 className="text-2xl font-bold font-['Cormorant_Garamond'] text-[#fca5a5]">
-              ARCHIVE ACCESS INTERRUPTED
+            <h3 className="text-2xl font-bold font-serif text-white light:text-slate-900">
+              Archive Access Interrupted
             </h3>
-            <p className="text-sm text-[#9C8B7A] font-['Crimson_Pro'] italic leading-relaxed">
-              We could not retrieve or render the requested archive record. Your ledger records remain secure.
+            <p className="text-xs text-zinc-400 light:text-slate-600 leading-relaxed font-sans">
+              We encountered an issue rendering this subsystem view. Your encrypted ledger records remain secure.
             </p>
             <div className="pt-2">
               <ClassicalButton

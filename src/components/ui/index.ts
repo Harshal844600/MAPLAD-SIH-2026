@@ -23,17 +23,32 @@ export * from './AnimatedCounter';
 export * from './Interactive3DCard';
 export * from './AIThinkingWaves';
 export * from './AccessDeniedDossier';
+export * from './StickyNote';
+export * from './GoogleSignInButton';
+export * from './AuthModal';
+export * from './GoogleAuthRequiredDossier';
+
+// Neural Gold Special Components
+export * from './NeuralConnectionLines';
+export * from './SatelliteCard';
+export * from './LiveStatusPill';
 
 // Backward-compatible aliases
 export { ClassicalCard as WobblyCard } from './ClassicalCard';
+export { ClassicalCard as GlassCard } from './ClassicalCard';
 export { ClassicalButton as SketchButton } from './ClassicalButton';
+export { ClassicalButton as GlassButton } from './ClassicalButton';
 export { ClassicalInput as SketchInput } from './ClassicalInput';
+export { ClassicalInput as GlassInput } from './ClassicalInput';
 export { ClassicalSelect as SketchSelect } from './ClassicalSelect';
+export { ClassicalSelect as GlassSelect } from './ClassicalSelect';
 export { ClassicalSearch as SketchSearch } from './ClassicalSearch';
+export { ClassicalSearch as GlassSearch } from './ClassicalSearch';
 export { ClassicalModal as SketchModal } from './ClassicalModal';
+export { ClassicalModal as GlassModal } from './ClassicalModal';
 export { ClassicalTabs as SketchTabs } from './ClassicalTabs';
-export { DossierCard as StickyNote } from './DossierCard';
-export { WaxSeal as GovernmentStamp } from './WaxSeal';
+export { ClassicalTabs as GlassTabs } from './ClassicalTabs';
+export { DossierCard as GovernmentStamp } from './DossierCard';
 export { CornerFlourish as TapeStrip } from './CornerFlourish';
 export { CornerFlourish as ThumbtackPin } from './CornerFlourish';
 export { OrnateDivider as Squiggle } from './OrnateDivider';

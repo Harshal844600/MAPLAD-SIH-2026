@@ -11,7 +11,7 @@ export async function explainWhyProjectFlagged(
 ): Promise<SentinelAIAnalysisResult> {
   const context = buildGroundingContext(project, anomalies, transactions, documents, vendor);
   return querySentinelGroqAI(
-    'Synthesize a forensic breakdown explaining WHY this MPLAD project was flagged. List primary facts, inferences, and high-priority evidence citations.',
+    `Synthesize an executive forensic breakdown explaining why Project #${project.project_code} ("${project.title}") in ${project.district_name}, ${project.state_name} was rated with a risk score of ${project.risk_score}/100. Categorize primary documented facts, inferences, and statutory action steps.`,
     context
   );
 }

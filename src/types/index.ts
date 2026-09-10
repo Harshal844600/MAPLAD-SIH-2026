@@ -4,10 +4,15 @@
 
 export type UserRole =
   | 'SUPER_ADMIN'
-  | 'STATE_ADMIN'
+  | 'MINISTRY_ADMIN'
+  | 'MP_OFFICER'
   | 'DISTRICT_OFFICER'
-  | 'MP_USER'
   | 'AUDITOR'
+  | 'DATA_ANALYST'
+  | 'FIELD_OFFICER'
+  // Backward compatibility aliases
+  | 'STATE_ADMIN'
+  | 'MP_USER'
   | 'VIEWER';
 
 export type ProjectStatus =
@@ -35,6 +40,45 @@ export type InvestigationStatus =
   | 'RESOLVED'
   | 'DISMISSED';
 
+
+export type AppPermission =
+  // Monitoring
+  | 'dashboard.view'
+  | 'projects.view'
+  | 'projects.create'
+  | 'projects.edit'
+  | 'projects.delete'
+  | 'projects.verify'
+  | 'projects.approve'
+  | 'projects.reject'
+  | 'funds.view'
+  | 'funds.monitor'
+  | 'constituency.view'
+  | 'district.view'
+  // Intelligence
+  | 'anomaly.view'
+  | 'fraud.view'
+  | 'risk.view'
+  | 'geo.view'
+  | 'ai.view'
+  | 'ai.config'
+  // Operations
+  | 'inspections.view'
+  | 'inspections.manage'
+  | 'evidence.upload'
+  | 'evidence.view'
+  | 'documents.ocr'
+  // Reporting
+  | 'reports.view'
+  | 'reports.export'
+  | 'analytics.view'
+  // Administration
+  | 'users.manage'
+  | 'roles.manage'
+  | 'audit.view'
+  | 'settings.manage'
+  | '*';
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -48,7 +92,26 @@ export interface UserProfile {
   constituency_name?: string;
   designation?: string;
   department?: string;
+  avatar_url?: string;
+  auth_provider?: 'google' | 'demo' | 'email';
+  permissions?: AppPermission[];
 }
+
+export interface DemoUserAccount {
+  id: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  full_name: string;
+  designation: string;
+  department: string;
+  clearanceLevel: 'TOP_SECRET' | 'CONFIDENTIAL' | 'RESTRICTED' | 'OFFICIAL' | 'PUBLIC';
+  description: string;
+  state_name?: string;
+  district_name?: string;
+  constituency_name?: string;
+}
+
 
 export interface StateInfo {
   id: string;

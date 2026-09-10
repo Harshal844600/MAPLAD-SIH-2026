@@ -1,19 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Send,
   Sparkles,
   ShieldAlert,
   Bot,
   Scroll,
+  Cpu,
+  CheckCircle2,
+  AlertTriangle,
+  Copy,
+  Check,
+  RotateCcw,
+  Zap,
+  HelpCircle,
+  FileText,
+  MapPin,
+  Fingerprint,
+  ShieldCheck,
+  User,
+  Radio,
 } from 'lucide-react';
 import {
   ClassicalCard,
-  DossierCard,
   ClassicalButton,
-  ClassicalInput,
   VolumeHeader,
   ArchiveLabel,
   AIThinkingWaves,
+  LiveStatusPill,
 } from '../components/ui';
 import { appStore } from '../services/store/appStore';
 import { querySentinelGroqAI, buildGroundingContext } from '../services/ai';
@@ -25,11 +38,14 @@ interface ChatMessage {
   text: string;
   analysis?: SentinelAIAnalysisResult;
   timestamp: string;
+  isStreaming?: boolean;
 }
 
 export const SentinelAIPage: React.FC = () => {
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const flagshipProject = appStore.getProjectById('MPLAD-10291')!;
   const anomalies = appStore.getProjectAnomalies(flagshipProject.id);
@@ -40,17 +56,58 @@ export const SentinelAIPage: React.FC = () => {
     {
       id: 'msg-1',
       sender: 'SENTINEL',
-      text: `Greetings, Officer. I am Sentinel AI, your evidence-grounded forensic copilot for the MPLAD Scheme. I operate under strict institutional hallucination controls: every conclusion is grounded in documented project vouchers, timeline logs, and PostGIS coordinates.`,
+      text: `Hello, Officer. I am **Sentinel AI**, your real-time forensic intelligence and investigative copilot for the MPLAD Scheme.\n\nI am powered by live generative neural models with direct access to national project ledgers, Schedule of Rates, contractor HHI cartel matrices, and PostGIS spatial proximity buffers. How can I assist your investigation today?`,
       timestamp: '10:00 AM',
     },
   ]);
 
-  const presetQueries = [
-    'Why is Project #MPLAD-10291 flagged as Critical (91/100)?',
-    'Which contractors have excessive award concentration in Prayagraj?',
-    'Explain the duplicate invoice disbursement pattern on #INV-APX-884.',
-    'Summarize recommended on-ground verification steps for Phulpur site.',
+  const presetCategories = [
+    {
+      label: 'Financial & Invoices',
+      query: 'Explain the duplicate invoice disbursement pattern on #INV-APX-884.',
+      icon: FileText,
+    },
+    {
+      label: 'Vendor Cartel (HHI)',
+      query: 'Which contractors have excessive award concentration in Prayagraj?',
+      icon: Fingerprint,
+    },
+    {
+      label: 'Spatial Overlap (PostGIS)',
+      query: 'Explain the 8.2m spatial boundary overlap detected at Phulpur.',
+      icon: MapPin,
+    },
+    {
+      label: 'Flagship Dossier (#10291)',
+      query: 'Why is Project #MPLAD-10291 flagged as Critical (91/100)?',
+      icon: Sparkles,
+    },
   ];
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
+
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleClearChat = () => {
+    setMessages([
+      {
+        id: `msg-${Date.now()}`,
+        sender: 'SENTINEL',
+        text: `Chat session reset. You can ask me any question in natural language regarding project compliance, vendor cartels, spatial proximity buffers, or financial audits across the MPLADS repository.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ]);
+  };
 
   const handleSendQuery = async (queryText: string) => {
     if (!queryText.trim() || isLoading) return;
@@ -67,17 +124,31 @@ export const SentinelAIPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Dynamic Context Resolution: Check if query references any specific project in store
+      let targetProject = flagshipProject;
+      const foundMatch = appStore.getProjects({ pageSize: 50 }).items.find((p) =>
+        queryText.toLowerCase().includes(p.project_code.toLowerCase())
+      );
+      if (foundMatch) {
+        targetProject = foundMatch;
+      }
+
+      const pAnomalies = appStore.getProjectAnomalies(targetProject.id);
+      const pTransactions = appStore.getProjectTransactions(targetProject.id);
+      const pDocuments = appStore.getProjectDocuments(targetProject.id);
+
       const context = buildGroundingContext(
-        flagshipProject,
-        anomalies,
-        transactions,
-        documents
+        targetProject,
+        pAnomalies,
+        pTransactions,
+        pDocuments
       );
 
       const analysis = await querySentinelGroqAI(queryText, context);
 
+      const botMsgId = `bot-${Date.now()}`;
       const botMsg: ChatMessage = {
-        id: `bot-${Date.now()}`,
+        id: botMsgId,
         sender: 'SENTINEL',
         text: analysis.summary,
         analysis,
@@ -85,7 +156,10 @@ export const SentinelAIPage: React.FC = () => {
       };
 
       setMessages((prev) => [...prev, botMsg]);
-      appStore.logAudit('AI_QUERY_EXECUTED', 'AI', undefined, { query: queryText });
+      appStore.logAudit('AI_QUERY_EXECUTED', 'AI', undefined, {
+        query: queryText,
+        modelVersion: analysis.modelVersion,
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -94,90 +168,191 @@ export const SentinelAIPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12 animate-page-enter">
       {/* 1. VOLUME HEADER */}
       <VolumeHeader
         volume="SENTINEL AI"
-        title="ARCHIVAL RESEARCH DESK & COPILOT"
-        subtitle="Evidence-backed investigation assistant powered by Groq Llama-3.3 70B with strict evidentiary grounding."
+        title="Live Grounded Forensic Intelligence Copilot"
+        subtitle="Real-time multi-layer neural reasoning engine connected to live MPLADS telemetry with zero hallucination."
         action={
-          <span className="font-['Cinzel'] text-xs font-bold px-3 py-1.5 bg-[#1C1714] text-[#C9A962] border border-[#4A3F35] rounded tracking-widest">
-            MODEL: GROQ/LLAMA-3.3-70B
-          </span>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-950/40 light:bg-emerald-50 border border-emerald-500/40 rounded-full text-xs font-mono text-emerald-300 light:text-emerald-800">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>LIVE AI CONNECTED</span>
+            </div>
+            <button
+              onClick={handleClearChat}
+              className="p-2 rounded-xl border border-white/10 light:border-slate-300 bg-white/[0.04] light:bg-slate-100 hover:bg-white/[0.08] text-zinc-400 light:text-slate-600 transition-all cursor-pointer"
+              title="Reset Conversation"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
         }
       />
 
-      {/* 2. PRESET QUERY CHIPS */}
-      <div className="flex flex-wrap gap-2">
-        {presetQueries.map((pq, idx) => (
-          <button
-            key={idx}
-            onClick={() => handleSendQuery(pq)}
-            className="text-xs font-['Cinzel'] px-3.5 py-2 bg-[#251E19] text-[#E8DFD4] border border-[#4A3F35] rounded hover:border-[#C9A962] hover:text-[#C9A962] text-left transition-colors shadow-sm"
-          >
-            ✦ {pq}
-          </button>
-        ))}
+      {/* 2. PRESET CATEGORY CHIPS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+        {presetCategories.map((cat, idx) => {
+          const Icon = cat.icon;
+          return (
+            <button
+              key={idx}
+              onClick={() => handleSendQuery(cat.query)}
+              className="p-3 bg-white/[0.03] light:bg-white hover:bg-[#c9b8a0]/15 light:hover:bg-[#FDF8F3] border border-white/10 light:border-[#E7E5E4] hover:border-[#c9b8a0] light:hover:border-[#8C735D] rounded-2xl text-left transition-all shadow-sm cursor-pointer group flex items-start gap-2.5"
+            >
+              <div className="p-1.5 rounded-lg bg-white/5 light:bg-[#F5EFEB] text-[#c9b8a0] light:text-[#8C735D] shrink-0 mt-0.5 border light:border-[#E7E0D8]">
+                <Icon className="w-3.5 h-3.5" />
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] font-mono font-bold text-[#c9b8a0] light:text-[#8C735D] uppercase tracking-wider block truncate">
+                  {cat.label}
+                </span>
+                <p className="text-xs text-zinc-300 light:text-[#334155] font-sans line-clamp-1 group-hover:text-white light:group-hover:text-[#0F172A]">
+                  {cat.query}
+                </p>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* 3. CHAT MESSAGES CONTAINER */}
-      <div className="space-y-4 min-h-[420px] max-h-[560px] overflow-y-auto p-5 bg-[#1C1714] border border-[#4A3F35] rounded shadow-xl">
+      <div className="space-y-6 min-h-[480px] max-h-[640px] overflow-y-auto p-6 bg-black/40 light:bg-[#FAFAF9] border border-white/10 light:border-[#E7E5E4] rounded-[32px] shadow-2xl backdrop-blur-xl sentinel-copilot-card">
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex flex-col ${msg.sender === 'USER' ? 'items-end' : 'items-start'}`}
           >
             <div
-              className={`max-w-2xl p-5 border rounded space-y-3 ${
+              className={`max-w-3xl p-6 rounded-[28px] space-y-4 shadow-sm ${
                 msg.sender === 'USER'
-                  ? 'bg-[#251E19] border-[#C9A962]/50 text-[#E8DFD4]'
-                  : 'bg-[#251E19] border-[#4A3F35] text-[#E8DFD4]'
+                  ? 'bg-gradient-to-r from-[#a78b71]/25 to-[#c9b8a0]/20 light:from-[#F6F1EB] light:to-[#EDE4D8] border border-[#a78b71]/40 light:border-[#D8C7B5] text-white light:text-[#1E293B] shadow-[0_0_20px_rgba(167,139,113,0.15)] light:shadow-[0_4px_16px_rgba(140,115,93,0.12)]'
+                  : 'bg-white/[0.03] light:bg-white backdrop-blur-md border border-white/10 light:border-[#E2E8F0] text-zinc-100 light:text-[#0F172A] light:shadow-[0_4px_20px_-2px_rgba(15,23,42,0.06)]'
               }`}
             >
-              <div className="flex items-center justify-between text-xs font-['Cinzel'] border-b border-[#4A3F35] pb-2">
-                <span className="font-bold text-[#C9A962]">
-                  {msg.sender === 'USER' ? 'INVESTIGATOR INQUIRY' : 'SENTINEL ARCHIVAL RESPONSE'}
+              {/* Message Header */}
+              <div className="flex items-center justify-between text-xs font-mono border-b border-white/10 light:border-[#E2E8F0] pb-2.5">
+                <span className="font-bold text-[#c9b8a0] light:text-[#8C735D] flex items-center gap-2">
+                  {msg.sender === 'USER' ? (
+                    <>
+                      <User className="w-3.5 h-3.5" /> INVESTIGATOR INQUIRY
+                    </>
+                  ) : (
+                    <>
+                      <Bot className="w-4 h-4 text-[#e8d5b7] light:text-[#8C735D]" /> SENTINEL AI SYNTHESIS
+                    </>
+                  )}
                 </span>
-                <span className="text-[10px] text-[#9C8B7A]">{msg.timestamp}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] text-zinc-400 light:text-[#64748B]">{msg.timestamp}</span>
+                  {msg.sender === 'SENTINEL' && (
+                    <button
+                      onClick={() => handleCopy(msg.id, msg.text)}
+                      className="text-zinc-400 hover:text-white light:text-[#64748B] light:hover:text-[#0F172A] transition-colors cursor-pointer"
+                      title="Copy Response"
+                    >
+                      {copiedId === msg.id ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400 light:text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <p className="font-['Crimson_Pro'] text-base leading-relaxed whitespace-pre-wrap">
+              {/* Message Body */}
+              <div className="font-sans text-sm sm:text-base leading-relaxed whitespace-pre-wrap text-zinc-200 light:text-[#1E293B]">
                 {msg.text}
-              </p>
+              </div>
 
               {/* Structured Key Findings Cards if provided */}
               {msg.analysis && (
-                <div className="space-y-3 pt-3 border-t border-[#4A3F35] font-['Crimson_Pro'] text-xs">
-                  <h5 className="font-['Cinzel'] font-bold text-xs text-[#C9A962] tracking-wider">
-                    EVIDENCE GROUNDING BREAKDOWN:
-                  </h5>
-                  {msg.analysis.keyFindings.map((finding, fi) => (
-                    <div
-                      key={fi}
-                      className="p-3 bg-[#1C1714] border border-[#4A3F35] rounded space-y-1"
+                <div className="space-y-4 pt-3 border-t border-white/10 light:border-[#E2E8F0] font-sans text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-xs text-[#c9b8a0] light:text-[#8C735D] tracking-wider uppercase flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" /> EVIDENCE GROUNDING BREAKDOWN:
+                    </span>
+                    <span
+                      className={`font-mono font-bold px-2.5 py-0.5 rounded-full text-[10px] ${
+                        msg.analysis.riskLevel === 'CRITICAL'
+                          ? 'bg-red-950/50 light:bg-red-50 text-red-400 light:text-red-700 border border-red-500/30 light:border-red-200'
+                          : 'bg-amber-950/50 light:bg-amber-50 text-amber-400 light:text-amber-800 border border-amber-500/30 light:border-amber-200'
+                      }`}
                     >
-                      <div className="flex justify-between items-center">
-                        <span className="font-['Cormorant_Garamond'] text-base font-bold text-[#E8DFD4]">{finding.title}</span>
-                        <span className="text-[10px] font-['Cinzel'] px-2 py-0.5 bg-[#8B2635]/20 text-[#E8DFD4] border border-[#8B2635] rounded">{finding.severity}</span>
-                      </div>
-                      <p className="text-xs text-[#9C8B7A]">
-                        <strong className="text-[#C9A962] font-['Cinzel'] text-[10px]">FACT: </strong> {finding.fact}
-                      </p>
-                      <p className="text-xs text-[#E8DFD4]">
-                        <strong className="text-[#8B2635] font-['Cinzel'] text-[10px]">INFERENCE: </strong> {finding.inference}
-                      </p>
-                    </div>
-                  ))}
+                      {msg.analysis.riskLevel} RISK (Confidence: {Math.round(msg.analysis.confidence * 100)}%)
+                    </span>
+                  </div>
 
-                  <div className="p-3 bg-[#3D332B]/50 border border-[#C9A962]/40 rounded text-[#E8DFD4]">
-                    <strong className="font-['Cinzel'] text-xs text-[#C9A962] tracking-wider block mb-1">
-                      RECOMMENDED AUDIT PROTOCOL:
-                    </strong>
-                    <ul className="list-disc list-inside space-y-1">
-                      {msg.analysis.recommendedNextSteps.map((step, si) => (
-                        <li key={si}>{step}</li>
+                  {msg.analysis.keyFindings.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {msg.analysis.keyFindings.map((finding, fi) => (
+                        <div
+                          key={fi}
+                          className="p-3.5 bg-black/40 light:bg-[#F8FAFC] border border-white/10 light:border-[#E2E8F0] rounded-2xl space-y-2 shadow-sm"
+                        >
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="font-serif text-sm font-bold text-white light:text-[#0F172A]">
+                              {finding.title}
+                            </span>
+                            <span
+                              className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded ${
+                                finding.severity === 'CRITICAL'
+                                  ? 'bg-red-950/50 light:bg-red-50 text-red-400 light:text-red-700 border border-red-500/30 light:border-red-200'
+                                  : 'bg-amber-950/50 light:bg-amber-50 text-amber-400 light:text-amber-800 border border-amber-500/30 light:border-amber-200'
+                              }`}
+                            >
+                              {finding.severity}
+                            </span>
+                          </div>
+                          <p className="text-xs text-zinc-300 light:text-[#334155] leading-relaxed">
+                            <strong className="text-[#c9b8a0] light:text-[#8C735D] font-mono text-[10px] block">DOCUMENTED FACT:</strong>
+                            {finding.fact}
+                          </p>
+                          <p className="text-xs text-zinc-200 light:text-[#1E293B] leading-relaxed">
+                            <strong className="text-red-400 light:text-red-700 font-mono text-[10px] block">FORENSIC INFERENCE:</strong>
+                            {finding.inference}
+                          </p>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
+                  )}
+
+                  {/* Recommended Audit Protocol */}
+                  {msg.analysis.recommendedNextSteps?.length > 0 && (
+                    <div className="p-4 bg-[#a78b71]/10 light:bg-[#FFFDF5] border border-[#a78b71]/30 light:border-[#FDE68A] rounded-2xl space-y-2">
+                      <strong className="font-mono text-xs text-[#e8d5b7] light:text-[#78350F] tracking-wider uppercase block flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400 light:text-emerald-600" /> STATUTORY AUDIT DIRECTIVES:
+                      </strong>
+                      <ul className="list-disc list-inside space-y-1 text-xs text-zinc-300 light:text-[#475569] leading-relaxed">
+                        {msg.analysis.recommendedNextSteps.map((step, si) => (
+                          <li key={si}>{step}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Follow-up Prompts */}
+                  <div className="pt-2">
+                    <span className="text-[10px] font-mono text-zinc-400 light:text-[#64748B] uppercase tracking-wider block mb-1.5">
+                      SUGGESTED INVESTIGATION FOLLOW-UPS:
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        'Generate CAG Statutory Audit Reference Docket',
+                        'View Raw OCR Invoice Text Streams',
+                        'Check PostGIS 25m Topological Map Buffer',
+                      ].map((sug, suidx) => (
+                        <button
+                          key={suidx}
+                          onClick={() => handleSendQuery(sug)}
+                          className="text-[11px] font-mono px-3 py-1 bg-white/[0.04] light:bg-white hover:bg-[#c9b8a0]/20 light:hover:bg-[#F8FAFC] border border-white/10 light:border-[#CBD5E1] light:hover:border-[#8C735D] rounded-lg text-zinc-300 light:text-[#334155] light:hover:text-[#0F172A] transition-all cursor-pointer shadow-xs"
+                        >
+                          → {sug}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -187,9 +362,10 @@ export const SentinelAIPage: React.FC = () => {
 
         {isLoading && (
           <div className="w-full">
-            <AIThinkingWaves isStreaming={true} statusText="Groq Llama 3.3 70B Grounding Evidence Across Vouchers & Coordinates..." />
+            <AIThinkingWaves isStreaming={true} statusText="Groq Neural Model Generating Real-Time Grounded Evidence..." />
           </div>
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* 4. INPUT PROMPT BOX */}
@@ -204,8 +380,8 @@ export const SentinelAIPage: React.FC = () => {
           type="text"
           value={inputQuery}
           onChange={(e) => setInputQuery(e.target.value)}
-          placeholder="Consult Sentinel AI regarding risk indicators, contractor history, or timeline conflicts..."
-          className="flex-1 bg-[#251E19] border border-[#4A3F35] rounded px-4 py-3 min-h-[50px] font-['Crimson_Pro'] text-base text-[#E8DFD4] placeholder:italic placeholder:text-[#9C8B7A] focus:outline-none focus:border-[#C9A962]"
+          placeholder="Ask Sentinel AI anything in natural language..."
+          className="flex-1 bg-black/60 light:bg-white border border-white/15 light:border-[#CBD5E1] rounded-2xl px-5 py-3.5 min-h-[52px] font-sans text-sm text-white light:text-[#0F172A] placeholder:text-zinc-500 light:placeholder:text-[#94A3B8] focus:outline-none focus:border-[#c9b8a0] light:focus:border-[#8C735D] light:focus:ring-2 light:focus:ring-[#8C735D]/20 transition-all shadow-xl light:shadow-[0_4px_16px_rgba(15,23,42,0.06)]"
         />
         <ClassicalButton
           type="submit"
@@ -214,10 +390,9 @@ export const SentinelAIPage: React.FC = () => {
           disabled={!inputQuery.trim() || isLoading}
           icon={<Send className="w-4 h-4" />}
         >
-          QUERY
+          SUBMIT
         </ClassicalButton>
       </form>
     </div>
   );
 };
-

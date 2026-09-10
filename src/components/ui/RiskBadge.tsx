@@ -8,6 +8,7 @@ export interface RiskBadgeProps {
   showScore?: boolean;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  code?: string; // Optional code like FIN-COST-001 or GEO-DUP-001
 }
 
 export const RiskBadge: React.FC<RiskBadgeProps> = ({
@@ -16,6 +17,7 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({
   showScore = true,
   size = 'md',
   className = '',
+  code,
 }) => {
   const computedLevel: RiskLevel =
     level ||
@@ -31,56 +33,58 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({
 
   const config = {
     CRITICAL: {
-      bg: 'bg-[#8B2635]/25',
-      border: 'border-[#8B2635]',
-      text: 'text-[#fca5a5]',
-      icon: <ShieldAlert className="shrink-0 text-[#fca5a5]" strokeWidth={1.5} />,
-      label: 'CRITICAL RISK',
+      bg: 'bg-rose-950/40 light:bg-rose-100/90',
+      border: 'border-rose-500/40 light:border-rose-300',
+      text: 'text-rose-300 light:text-rose-800',
+      glow: 'shadow-[0_0_15px_rgba(239,68,68,0.25)] light:shadow-none',
+      icon: <ShieldAlert className="shrink-0 text-rose-400 light:text-rose-600" strokeWidth={1.75} />,
+      label: 'CRITICAL',
     },
     HIGH: {
-      bg: 'bg-[#d97706]/20',
-      border: 'border-[#d97706]',
-      text: 'text-[#fbbf24]',
-      icon: <AlertTriangle className="shrink-0 text-[#fbbf24]" strokeWidth={1.5} />,
-      label: 'ELEVATED RISK',
+      bg: 'bg-amber-950/40 light:bg-amber-100/90',
+      border: 'border-amber-500/40 light:border-amber-300',
+      text: 'text-amber-300 light:text-amber-800',
+      glow: 'shadow-[0_0_15px_rgba(245,158,11,0.2)] light:shadow-none',
+      icon: <AlertTriangle className="shrink-0 text-amber-400 light:text-amber-600" strokeWidth={1.75} />,
+      label: 'HIGH',
     },
     MEDIUM: {
-      bg: 'bg-[#C9A962]/15',
-      border: 'border-[#C9A962]/60',
-      text: 'text-[#C9A962]',
-      icon: <AlertCircle className="shrink-0 text-[#C9A962]" strokeWidth={1.5} />,
-      label: 'MODERATE RISK',
+      bg: 'bg-[#a78b71]/15 light:bg-amber-50/90',
+      border: 'border-[#a78b71]/40 light:border-amber-200',
+      text: 'text-[#e8d5b7] light:text-amber-900',
+      glow: 'shadow-[0_0_15px_rgba(167,139,113,0.15)] light:shadow-none',
+      icon: <AlertCircle className="shrink-0 text-[#c9b8a0] light:text-amber-700" strokeWidth={1.75} />,
+      label: 'MODERATE',
     },
     LOW: {
-      bg: 'bg-[#2e7d32]/20',
-      border: 'border-[#2e7d32]',
-      text: 'text-[#a5d6a7]',
-      icon: <CheckCircle2 className="shrink-0 text-[#a5d6a7]" strokeWidth={1.5} />,
-      label: 'LOW RISK',
+      bg: 'bg-emerald-950/40 light:bg-emerald-100/90',
+      border: 'border-emerald-500/40 light:border-emerald-300',
+      text: 'text-emerald-300 light:text-emerald-800',
+      glow: 'shadow-[0_0_15px_rgba(16,185,129,0.2)] light:shadow-none',
+      icon: <CheckCircle2 className="shrink-0 text-emerald-400 light:text-emerald-600" strokeWidth={1.75} />,
+      label: 'LOW',
     },
   }[computedLevel];
 
-  const sizeClasses = {
-    sm: 'text-[10px] px-2 py-0.5 gap-1.5 min-h-[22px]',
-    md: 'text-xs px-2.5 py-1 gap-2 min-h-[28px]',
-    lg: 'text-sm px-4 py-1.5 gap-2.5 min-h-[36px]',
-  }[size];
-
-  const iconSizes = {
-    sm: 'w-3.5 h-3.5',
-    md: 'w-4 h-4',
-    lg: 'w-4.5 h-4.5',
+  const sizeStyles = {
+    sm: 'text-[10px] px-2 py-0.5 gap-1.5 [&_svg]:w-3 [&_svg]:h-3',
+    md: 'text-xs px-2.5 py-1 gap-1.5 [&_svg]:w-3.5 [&_svg]:h-3.5',
+    lg: 'text-sm px-3.5 py-1.5 gap-2 [&_svg]:w-4 [&_svg]:h-4',
   }[size];
 
   return (
     <span
-      className={`inline-flex items-center font-['Cinzel'] font-bold uppercase tracking-[0.15em] border rounded-[2px] ${config.bg} ${config.border} ${config.text} ${sizeClasses} ${className}`}
+      className={`inline-flex items-center font-mono font-semibold uppercase tracking-wider rounded-full border backdrop-blur-md transition-all select-none ${config.bg} ${config.border} ${config.text} ${config.glow} ${sizeStyles} ${className}`}
     >
-      <span className={iconSizes}>{config.icon}</span>
-      <span>{config.label}</span>
+      {config.icon}
+      {code ? (
+        <span>{code}</span>
+      ) : (
+        <span>{config.label}</span>
+      )}
       {showScore && score !== undefined && (
-        <span className="ml-1 pl-1.5 border-l border-current font-mono font-bold text-[#E8DFD4]">
-          {score}/100
+        <span className="font-mono opacity-80 pl-1 border-l border-white/15">
+          {score}
         </span>
       )}
     </span>

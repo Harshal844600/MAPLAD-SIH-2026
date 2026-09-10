@@ -12,12 +12,11 @@ import {
   FileCheck,
   Settings,
   Sparkles,
-  BookOpen,
   UserCheck,
 } from 'lucide-react';
-import { CornerFlourish } from '../ui';
+import { AppPermission } from '../../types';
+import { KeyRound } from 'lucide-react';
 import { useCurrentUser } from '../../services/store/useCurrentUser';
-import { AppPermission } from '../../services/store/rbac';
 
 interface AppSidebarProps {
   isOpen?: boolean;
@@ -36,16 +35,17 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
     highlight?: boolean;
     permission?: AppPermission;
   }[] = [
-    { to: '/dashboard', label: 'Command Center', icon: LayoutDashboard, volume: 'VOL I', permission: 'VIEW_DASHBOARD' },
-    { to: '/projects', label: 'Project Archive', icon: FolderGit2, count: '1,050', permission: 'VIEW_PROJECTS' },
-    { to: '/risk', label: 'Risk Intelligence', icon: ShieldAlert, volume: 'VOL II', permission: 'VIEW_RISK_INTELLIGENCE' },
-    { to: '/map', label: 'Geographic Map', icon: MapPin, permission: 'VIEW_MAP' },
-    { to: '/investigations', label: 'Investigations', icon: FileSearch, count: '1', permission: 'VIEW_INVESTIGATIONS' },
-    { to: '/sentinel-ai', label: 'Sentinel AI Copilot', icon: Bot, highlight: true, permission: 'VIEW_AI_COPILOT' },
-    { to: '/documents', label: 'Document Archive', icon: FileText, permission: 'VIEW_DOCUMENTS_OCR' },
-    { to: '/analytics', label: 'Macro Analytics', icon: BarChart3, permission: 'VIEW_ANALYTICS' },
-    { to: '/reports', label: 'Reports & Dossiers', icon: FileCheck, volume: 'VOL V', permission: 'EXPORT_REPORTS' },
-    { to: '/admin', label: 'Archive Governance', icon: Settings, permission: 'MANAGE_ADMIN_SETTINGS' },
+    { to: '/dashboard', label: 'Command Center', icon: LayoutDashboard, volume: 'VOL I', permission: 'dashboard.view' },
+    { to: '/projects', label: 'Project Ledgers', icon: FolderGit2, count: '1,050', permission: 'projects.view' },
+    { to: '/risk', label: 'Risk Intelligence', icon: ShieldAlert, volume: 'VOL II', permission: 'risk.view' },
+    { to: '/map', label: 'Geographic Map', icon: MapPin, permission: 'geo.view' },
+    { to: '/investigations', label: 'Investigations', icon: FileSearch, count: '1', permission: 'anomaly.view' },
+    { to: '/sentinel-ai', label: 'Sentinel AI Copilot', icon: Bot, highlight: true, permission: 'ai.view' },
+    { to: '/documents', label: 'Document Archive', icon: FileText, permission: 'documents.ocr' },
+    { to: '/analytics', label: 'Macro Analytics', icon: BarChart3, permission: 'analytics.view' },
+    { to: '/reports', label: 'Reports & Dossiers', icon: FileCheck, volume: 'VOL V', permission: 'reports.view' },
+    { to: '/permissions', label: 'Clearance Matrix', icon: KeyRound, permission: 'dashboard.view' },
+    { to: '/admin', label: 'Archive Governance', icon: Settings, permission: 'settings.manage' },
   ];
 
   // Only show navigation items permitted for the active role
@@ -53,46 +53,47 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
     (item) => !item.permission || can(item.permission)
   );
 
+
   return (
     <>
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-[#1C1714]/80 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 lg:hidden"
           onClick={onClose}
         />
       )}
 
       <aside
-        className={`fixed lg:sticky top-[69px] left-0 z-40 h-[calc(100vh-69px)] w-72 bg-[#1C1714] border-r border-[#4A3F35] p-4 flex flex-col justify-between overflow-y-auto transition-transform duration-300 ${
+        className={`fixed lg:sticky top-[73px] left-0 z-40 h-[calc(100vh-73px)] w-72 bg-[#0a0a0a]/95 light:bg-white/95 backdrop-blur-xl border-r border-white/10 light:border-slate-200 p-4 flex flex-col justify-between overflow-y-auto transition-all duration-300 ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="space-y-4">
           {/* Active Role & Clearance Badge */}
-          <div className="p-3 bg-[#251E19] border border-[#C9A962]/40 rounded-[3px] space-y-1">
-            <div className="flex items-center justify-between text-[10px] font-['Cinzel'] font-bold text-[#C9A962]">
-              <span className="flex items-center gap-1">
-                <UserCheck className="w-3 h-3" /> ACTIVE PROFILE
+          <div className="p-3.5 bg-white/[0.03] light:bg-slate-50 border border-white/10 light:border-slate-200 rounded-2xl space-y-1.5 shadow-sm">
+            <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[#c9b8a0] light:text-[#8C735D]">
+              <span className="flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-[#a78b71] light:text-[#8C735D]" /> ACTIVE PROFILE
               </span>
-              <span className="px-1.5 py-0.2 bg-[#1C1714] text-[9px] border border-[#4A3F35] rounded">
+              <span className="px-2 py-0.5 bg-black/60 light:bg-slate-200 text-zinc-300 light:text-slate-800 text-[9px] border border-white/10 light:border-slate-300 rounded-full">
                 {roleMetadata.clearanceLevel}
               </span>
             </div>
-            <div className="font-['Cormorant_Garamond'] font-bold text-sm text-[#E8DFD4] truncate">
+            <div className="font-['Playfair_Display'] font-semibold text-sm text-white light:text-slate-900 truncate">
               {roleMetadata.title}
             </div>
-            <div className="text-[10px] font-['Crimson_Pro'] text-[#9C8B7A] truncate">
+            <div className="text-[11px] font-['Inter'] text-gray-400 light:text-slate-500 truncate">
               {roleMetadata.department}
             </div>
           </div>
 
           {/* Section Overline */}
-          <div className="px-3 py-1.5 border-b border-[#4A3F35] flex items-center justify-between">
-            <span className="text-[10px] font-['Cinzel'] font-bold tracking-[0.25em] text-[#C9A962] uppercase">
-              ARCHIVE REGISTER
+          <div className="px-3 py-1 border-b border-white/10 light:border-slate-200 flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-[#c9b8a0] light:text-[#8C735D] uppercase">
+              NAVIGATION CONSOLE
             </span>
-            <span className="text-[#C9A962] text-xs select-none">✶</span>
+            <span className="text-[#a78b71] light:text-[#8C735D] text-xs select-none">✦</span>
           </div>
 
           {/* Navigation Links - Filtered by Active Role */}
@@ -106,26 +107,26 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
                   to={item.to}
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-3 py-2.5 font-['Cinzel'] text-xs uppercase tracking-[0.15em] rounded-[2px] transition-all duration-200 select-none ${
+                    `flex items-center justify-between px-3.5 py-2.5 font-['Inter'] text-xs font-semibold tracking-wider rounded-xl transition-all duration-200 select-none ${
                       isActive
-                        ? 'bg-[#251E19] text-[#C9A962] font-bold border-l-2 border-[#C9A962] shadow-sm'
+                        ? 'bg-gradient-to-r from-[#c9b8a0]/20 to-[#a78b71]/10 light:from-amber-100 light:to-amber-50 text-white light:text-[#78350F] font-bold border-l-2 border-[#c9b8a0] light:border-[#8C735D] shadow-[0_0_20px_rgba(167,139,113,0.15)] light:shadow-[0_2px_8px_rgba(140,115,93,0.1)]'
                         : item.highlight
-                        ? 'text-[#C9A962] hover:bg-[#251E19] hover:text-[#D4B872]'
-                        : 'text-[#9C8B7A] hover:text-[#E8DFD4] hover:bg-[#251E19]'
+                        ? 'text-[#e8d5b7] light:text-[#78350F] hover:bg-white/5 light:hover:bg-amber-50/60 hover:text-white light:hover:text-[#78350F]'
+                        : 'text-gray-400 light:text-slate-600 hover:text-white light:hover:text-slate-950 hover:bg-white/5 light:hover:bg-slate-100'
                     }`
                   }
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 shrink-0 text-[#C9A962]" strokeWidth={1.5} />
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-4 h-4 shrink-0 text-[#c9b8a0] light:text-[#8C735D]" strokeWidth={1.75} />
                     <span>{item.label}</span>
                   </div>
 
                   {item.volume ? (
-                    <span className="text-[9px] font-['Cinzel'] tracking-widest text-[#9C8B7A]">
+                    <span className="text-[9px] font-mono tracking-wider text-gray-400 light:text-slate-400">
                       {item.volume}
                     </span>
                   ) : item.count ? (
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 bg-[#251E19] text-[#9C8B7A] border border-[#4A3F35] rounded-[2px]">
+                    <span className="text-[10px] font-mono px-2 py-0.5 bg-white/5 light:bg-slate-100 text-gray-300 light:text-slate-700 border border-white/10 light:border-slate-200 rounded-full">
                       {item.count}
                     </span>
                   ) : null}
@@ -136,19 +137,19 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen = false, onClose 
         </div>
 
         {/* Sidebar Footer: Flagship Case Callout */}
-        <div className="pt-4 border-t border-[#4A3F35]">
+        <div className="pt-4 border-t border-white/10 light:border-slate-200">
           <a
             href="#/projects/proj-10291"
-            className="block p-3 bg-[#251E19] border border-[#8B2635]/60 hover:border-[#8B2635] rounded-[4px] transition-colors relative group"
+            className="block p-3.5 bg-rose-950/20 light:bg-rose-50 border border-rose-500/30 light:border-rose-200 hover:border-rose-500/60 rounded-2xl transition-all relative group shadow-[0_0_20px_rgba(239,68,68,0.15)] light:shadow-[0_2px_10px_rgba(225,29,72,0.08)]"
           >
-            <div className="flex items-center justify-between text-[10px] font-['Cinzel'] font-bold tracking-widest text-[#fca5a5] uppercase mb-1">
+            <div className="flex items-center justify-between text-[10px] font-mono font-bold tracking-widest text-rose-300 light:text-rose-700 uppercase mb-1">
               <span>PRIORITY CASE FILE</span>
-              <span className="text-[#fca5a5]">91/100</span>
+              <span className="font-mono">91/100</span>
             </div>
-            <h4 className="font-['Cormorant_Garamond'] text-sm font-bold text-[#E8DFD4] group-hover:text-[#C9A962] transition-colors line-clamp-1">
+            <h4 className="font-['Playfair_Display'] text-sm font-semibold text-white light:text-slate-900 group-hover:text-[#e8d5b7] light:group-hover:text-[#78350F] transition-colors line-clamp-1">
               #MPLAD-10291 (Phulpur)
             </h4>
-            <p className="text-[11px] font-['Crimson_Pro'] text-[#9C8B7A] line-clamp-1 italic">
+            <p className="text-[11px] font-['Inter'] text-gray-400 light:text-slate-600 line-clamp-1 mt-0.5">
               Duplicate invoice & 8m overlap
             </p>
           </a>

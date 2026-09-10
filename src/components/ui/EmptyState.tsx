@@ -2,7 +2,6 @@ import React from 'react';
 import { SearchX, RotateCcw } from 'lucide-react';
 import { ClassicalCard } from './ClassicalCard';
 import { ClassicalButton } from './ClassicalButton';
-import { CornerFlourish } from './CornerFlourish';
 
 export interface EmptyStateProps {
   title?: string;
@@ -28,16 +27,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <ClassicalCard
       variant="default"
-      className={`text-center py-12 px-6 flex flex-col items-center justify-center max-w-xl mx-auto relative ${className}`}
+      className={`text-center py-12 px-6 flex flex-col items-center justify-center max-w-xl mx-auto relative border-beam-card ${className}`}
     >
-      <CornerFlourish size="sm" color="#C9A962" />
-      <div className="w-14 h-14 mb-4 flex items-center justify-center border border-[#C9A962]/40 rounded-full bg-[#1C1714] text-[#C9A962]">
+      <div className="w-14 h-14 mb-4 flex items-center justify-center border border-[#c9b8a0]/30 rounded-2xl bg-white/[0.03] light:bg-slate-100 text-[#c9b8a0]">
         {icon || <SearchX className="w-6 h-6" strokeWidth={1.5} />}
       </div>
-      <h3 className="text-xl sm:text-2xl font-bold font-['Cormorant_Garamond'] text-[#E8DFD4] mb-1.5 tracking-tight">
+      <h3 className="text-xl sm:text-2xl font-bold font-serif text-white light:text-slate-900 mb-1.5 tracking-tight">
         {title}
       </h3>
-      <p className="text-sm text-[#9C8B7A] font-['Crimson_Pro'] italic max-w-md mb-6 leading-relaxed">
+      <p className="text-xs text-zinc-400 light:text-slate-600 max-w-md mb-6 leading-relaxed font-sans">
         {description}
       </p>
       {onAction && (
@@ -53,4 +51,3 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     </ClassicalCard>
   );
 };
-

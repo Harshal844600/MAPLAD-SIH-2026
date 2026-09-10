@@ -53,10 +53,34 @@ VITE_GROQ_MODEL=llama-3.3-70b-versatile
 
 ---
 
-## 🚀 Step 4: Run the Development Server
+## 🔐 Step 4: Configure Google OAuth 2.0 (Optional for Live Single Sign-On)
+
+To enable verified Google Login for officers and auditors:
+
+1. **Google Cloud Console**:
+   - Go to [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials).
+   - Click **Create Credentials** → **OAuth Client ID** → **Web application**.
+   - Under **Authorized JavaScript origins**, add:
+     - `http://localhost:3000`
+     - `http://localhost:5173`
+   - Under **Authorized redirect URIs**, add:
+     - `https://<YOUR-PROJECT-ID>.supabase.co/auth/v1/callback`
+   - Copy the generated **Client ID** and **Client Secret**.
+
+2. **Supabase Dashboard**:
+   - In Supabase, go to **Authentication** → **Providers** → **Google**.
+   - Toggle **Google Enabled** to `ON`.
+   - Paste your **Client ID** and **Client Secret**.
+   - Under **Authentication** → **URL Configuration** → **Redirect URLs**, add `http://localhost:3000/**` or your deployed URL.
+   - Click **Save**.
+
+---
+
+## 🚀 Step 5: Run the Development Server
 
 ```bash
 npm run dev
 ```
 
 Open [http://localhost:3000/#/administration](http://localhost:3000/#/administration) and switch to the **"SYSTEM HEALTH & SERVICES"** tab to see your live **Supabase Cloud** connection and real-time latency ping!
+

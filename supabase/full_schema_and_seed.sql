@@ -114,6 +114,8 @@ CREATE TABLE IF NOT EXISTS profiles (
     email TEXT NOT NULL UNIQUE,
     full_name TEXT NOT NULL,
     role user_role NOT NULL DEFAULT 'VIEWER',
+    avatar_url TEXT,
+    auth_provider TEXT DEFAULT 'email',
     state_id UUID REFERENCES states(id),
     district_id UUID REFERENCES districts(id),
     constituency_id UUID REFERENCES constituencies(id),
@@ -123,6 +125,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 
 -- 4. MASTER PROJECT & FINANCIAL REGISTRY
 CREATE TABLE IF NOT EXISTS project_categories (
@@ -524,3 +527,70 @@ INSERT INTO investigations (
     'Dr. K. S. Ramanujan (CAG Special Audit Directorate)',
     'Suspected duplicate billing under invoice #INV-APX-884 combined with co-location of newly sanctioned asset over pre-existing 2023 infrastructure.'
 ) ON CONFLICT (case_number) DO NOTHING;
+
+-- ==============================================================================
+-- 10. GOOGLE OAUTH USER SYNC TRIGGER
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+    user_full_name TEXT;
+    user_avatar TEXT;
+    assigned_role public.user_role;
+BEGIN
+    user_full_name := COALESCE(
+        NEW.raw_user_meta_data->>'full_name',
+        NEW.raw_user_meta_data->>'name',
+        split_part(NEW.email, '@', 1)
+    );
+
+    user_avatar := COALESCE(
+        NEW.raw_user_meta_data->>'avatar_url',
+        NEW.raw_user_meta_data->>'picture'
+    );
+
+    assigned_role := 'DISTRICT_OFFICER';
+
+    INSERT INTO public.profiles (
+        id,
+        email,
+        full_name,
+        role,
+        avatar_url,
+        auth_provider,
+        designation,
+        department,
+        is_active,
+        created_at,
+        updated_at
+    )
+    VALUES (
+        NEW.id,
+        NEW.email,
+        user_full_name,
+        assigned_role,
+        user_avatar,
+        COALESCE(NEW.raw_app_meta_data->>'provider', 'google'),
+        'District Nodal Officer (Google Verified)',
+        'Ministry of Statistics & Programme Implementation',
+        TRUE,
+        NOW(),
+        NOW()
+    )
+    ON CONFLICT (id) DO UPDATE
+    SET
+        full_name = EXCLUDED.full_name,
+        avatar_url = EXCLUDED.avatar_url,
+        auth_provider = EXCLUDED.auth_provider,
+        updated_at = NOW();
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT OR UPDATE ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+

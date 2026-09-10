@@ -5,10 +5,16 @@ import {
   ArrowRight,
   ShieldCheck,
   Scale,
+  Sparkles,
+  Layers,
+  Database,
+  MapPin,
+  Clock,
+  Fingerprint,
+  FileCheck,
 } from 'lucide-react';
 import {
   ClassicalCard,
-  DossierCard,
   RiskBadge,
   ClassicalTabs,
   VolumeHeader,
@@ -36,15 +42,15 @@ export const RiskIntelligence: React.FC = () => {
   }).items;
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 animate-page-enter">
       {/* 1. VOLUME HEADER */}
       <VolumeHeader
         volume="VOLUME III"
-        title="RISK REGISTER & DETECTION ENGINE"
-        subtitle="Explainable mathematical risk calculation engine cross-validating 6 forensic anomaly dimensions."
+        title="Risk Register & Forensic Detection Matrix"
+        subtitle="Explainable mathematical risk calculation engine cross-validating 6 forensic anomaly dimensions in real time."
         action={
-          <span className="font-['Cinzel'] text-xs font-bold px-3 py-1.5 bg-[#1C1714] text-[#C9A962] border border-[#4A3F35] rounded tracking-widest">
-            ALGORITHM v1.4.2-HYBRID
+          <span className="font-mono text-xs font-bold px-3 py-1.5 bg-white/[0.04] text-[#e8d5b7] border border-[#a78b71]/30 rounded-full tracking-wider shadow-sm">
+            ALGORITHM v2026.01-HYBRID
           </span>
         }
       />
@@ -64,9 +70,9 @@ export const RiskIntelligence: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left: Forensic Rules Catalog (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between border-b border-[#4A3F35] pb-2">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
             <ArchiveLabel text="ACTIVE DETECTION RULES MATRIX" />
-            <span className="text-[10px] font-['Cinzel'] text-[#9C8B7A] tracking-wider">
+            <span className="text-[10px] font-mono text-[#c9b8a0] tracking-wider uppercase">
               6 CORE EVALUATORS
             </span>
           </div>
@@ -76,17 +82,17 @@ export const RiskIntelligence: React.FC = () => {
               code: 'FIN-COST-001',
               title: 'Excessive Unit Cost Deviation',
               category: 'FINANCIAL',
-              impact: '+18-25 PTS',
-              desc: 'Flags projects where sanctioned cost exceeds standard Schedule of Rates benchmark by >40% without site terrain justification.',
-              status: 'ACTIVE',
+              impact: '+25 PTS',
+              desc: 'Flags line items where sanctioned cost exceeds official state Schedule of Rates (SoR) standard benchmarks by >40%.',
+              icon: Database,
             },
             {
               code: 'FIN-DUP-002',
               title: 'Duplicate Payment Invoice Reference',
               category: 'FINANCIAL',
               impact: '+30 PTS',
-              desc: 'Identifies multiple disbursements cleared against identical invoice numbers or hash signatures to the same contractor.',
-              status: 'ACTIVE',
+              desc: 'Identifies multiple disbursements cleared against identical invoice numbers or hash signatures to the same contractor entity.',
+              icon: Scale,
             },
             {
               code: 'TIME-SEQ-001',
@@ -94,84 +100,94 @@ export const RiskIntelligence: React.FC = () => {
               category: 'TIMELINE',
               impact: '+28 PTS',
               desc: 'Flags impossible milestone sequences where completion certificate timestamp predates administrative sanction authorization.',
-              status: 'ACTIVE',
+              icon: Clock,
             },
             {
               code: 'GEO-DUP-001',
-              title: 'GPS Coordinate Overlap (<25m)',
+              title: 'GPS Coordinate Proximity (<25m)',
               category: 'GEOGRAPHIC',
               impact: '+28 PTS',
-              desc: 'PostGIS spatial buffer detector flagging projects located within 25 meters of pre-existing completed infrastructure.',
-              status: 'ACTIVE',
+              desc: 'PostGIS spatial buffer detector flagging infrastructure located within 25 meters of pre-existing completed assets.',
+              icon: MapPin,
             },
             {
               code: 'VEN-CONC-001',
               title: 'High Vendor Concentration (HHI)',
               category: 'VENDOR',
-              impact: '+18-24 PTS',
-              desc: 'Detects single contractor securing over 60% of constituency works within one financial year.',
-              status: 'ACTIVE',
+              impact: '+24 PTS',
+              desc: 'Detects single contractor capturing over 60% of total constituency tenders within one financial allocation cycle.',
+              icon: Fingerprint,
             },
             {
               code: 'DOC-MIS-001',
-              title: 'Invoice OCR Amount vs Sanction Mismatch',
+              title: 'Invoice OCR Amount vs Sanction Ceiling',
               category: 'DOCUMENT',
               impact: '+18 PTS',
-              desc: 'OCR parsing flags billed invoice total exceeding sanction ceiling or differing from milestone payment record.',
-              status: 'ACTIVE',
+              desc: 'OCR parsing flags billed invoice total exceeding sanction ceiling or differing from milestone measurement records.',
+              icon: FileCheck,
             },
           ]
             .filter((r) => activeCategory === 'ALL' || r.category === activeCategory)
-            .map((rule) => (
-              <ClassicalCard key={rule.code} className="p-5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-['Cinzel'] font-bold text-xs px-2 py-0.5 bg-[#1C1714] text-[#C9A962] border border-[#4A3F35] rounded">
-                      {rule.code}
+            .map((rule) => {
+              const Icon = rule.icon;
+              return (
+                <div
+                  key={rule.code}
+                  className="p-5 bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-[#a78b71]/50 rounded-[24px] space-y-2.5 transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(167,139,113,0.15)]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono font-bold text-xs px-2.5 py-1 bg-black/40 text-[#e8d5b7] border border-white/10 rounded-full">
+                        {rule.code}
+                      </span>
+                      <span className="text-xs font-mono tracking-wider text-gray-400">{rule.category}</span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-rose-300 bg-rose-950/30 px-2.5 py-1 border border-rose-500/40 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+                      {rule.impact}
                     </span>
-                    <span className="text-xs font-['Cinzel'] tracking-wider text-[#E8DFD4]">{rule.category}</span>
                   </div>
-                  <span className="text-xs font-['Cinzel'] font-bold text-[#8B2635] bg-[#8B2635]/15 px-2 py-0.5 border border-[#8B2635] rounded">
-                    {rule.impact}
-                  </span>
+                  <h4 className="text-lg font-semibold font-['Playfair_Display'] text-white flex items-center gap-2">
+                    <Icon className="w-4 h-4 text-[#c9b8a0]" />
+                    {rule.title}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-gray-300 font-['Inter'] leading-relaxed">{rule.desc}</p>
                 </div>
-                <h4 className="text-lg font-['Cormorant_Garamond'] font-bold text-[#E8DFD4]">{rule.title}</h4>
-                <p className="text-sm text-[#9C8B7A] font-['Crimson_Pro'] leading-relaxed">{rule.desc}</p>
-              </ClassicalCard>
-            ))}
+              );
+            })}
         </div>
 
         {/* Right: High Risk Projects (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-[#4A3F35] pb-2">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
             <ArchiveLabel text="FLAGGED IMPLEMENTATIONS" />
-            <span className="text-[10px] font-['Cinzel'] text-[#8B2635] tracking-widest font-semibold">
+            <span className="text-[10px] font-mono text-rose-400 tracking-wider font-semibold uppercase">
               CRITICAL SEVERITY
             </span>
           </div>
 
           <div className="space-y-3">
             {criticalProjects.map((p) => (
-              <ClassicalCard
+              <div
                 key={p.id}
-                className={`p-4 space-y-2 transition-all ${
-                  p.risk_score >= 80 ? 'border-l-4 border-l-[#8B2635] bg-[#2A1D1A]' : ''
-                }`}
+                className="p-5 bg-rose-950/15 backdrop-blur-md border border-rose-500/30 hover:border-rose-500/60 rounded-[24px] space-y-2.5 transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.15)]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-['Cinzel'] font-bold text-xs text-[#C9A962]">{p.project_code}</span>
+                  <span className="font-mono font-bold text-xs text-[#e8d5b7]">#{p.project_code}</span>
                   <RiskBadge score={p.risk_score} size="sm" />
                 </div>
-                <h4 className="font-['Cormorant_Garamond'] font-bold text-base text-[#E8DFD4] line-clamp-1">
+                <h4 className="font-['Playfair_Display'] font-semibold text-base text-white line-clamp-1">
                   {p.title}
                 </h4>
-                <div className="flex items-center justify-between text-xs text-[#9C8B7A] font-['Crimson_Pro'] pt-2 border-t border-[#4A3F35]">
-                  <span className="italic">{p.district_name}, {p.state_name}</span>
-                  <Link to={`/projects/${p.project_code}`} className="font-['Cinzel'] font-bold text-[#C9A962] hover:text-[#E8DFD4] flex items-center gap-1 transition-colors">
-                    EXAMINE DOSSIER <ArrowRight className="w-3 h-3" />
+                <div className="flex items-center justify-between text-xs text-gray-300 font-['Inter'] pt-2.5 border-t border-white/10">
+                  <span className="truncate">{p.district_name}, {p.state_name}</span>
+                  <Link
+                    to={`/projects/${p.project_code}`}
+                    className="font-mono font-semibold text-[#c9b8a0] hover:text-white flex items-center gap-1 transition-colors shrink-0 ml-2"
+                  >
+                    EXAMINE <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
-              </ClassicalCard>
+              </div>
             ))}
           </div>
         </div>
@@ -179,4 +195,3 @@ export const RiskIntelligence: React.FC = () => {
     </div>
   );
 };
-

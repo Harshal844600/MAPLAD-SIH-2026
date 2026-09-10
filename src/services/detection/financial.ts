@@ -1,4 +1,5 @@
 import { AnomalyItem, ProjectEntity, TransactionRecord } from '../../types';
+import { getStandardBenchmarkRate } from './referenceRates';
 
 export const detectFinancialAnomalies = (
   project: ProjectEntity,
@@ -8,7 +9,7 @@ export const detectFinancialAnomalies = (
   const anomalies: AnomalyItem[] = [];
 
   // 1. FIN-COST-001: Excessive Cost Deviation
-  const benchmark = benchmarkCostPerUnit || 2500000; // fallback standard estimate
+  const benchmark = benchmarkCostPerUnit || getStandardBenchmarkRate(project);
   if (project.sanctioned_amount > benchmark * 1.4) {
     const deviationPercent = Math.round(
       ((project.sanctioned_amount - benchmark) / benchmark) * 100
