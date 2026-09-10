@@ -19,33 +19,101 @@ import {
   LiveStatusPill,
 } from '../components/ui';
 import { TrendingUp, Award, BarChart3, AlertOctagon } from 'lucide-react';
+import { appStore } from '../services/store/appStore';
 
 export const Analytics: React.FC = () => {
-  const financialYearTrend = [
-    { year: '2021-22', sanctioned: 180, utilized: 165 },
-    { year: '2022-23', sanctioned: 240, utilized: 210 },
-    { year: '2023-24', sanctioned: 310, utilized: 255 },
-    { year: '2024-25', sanctioned: 380, utilized: 285 },
-    { year: '2025-26', sanctioned: 420, utilized: 290 },
-  ];
+  const projects = appStore.getAllProjects();
+  const vendors = appStore.getVendors();
 
-  const vendorConcentration = [
-    { name: 'Apex Infra Ltd.', projects: 24, totalCr: 14.5, share: 32 },
-    { name: 'Bharat Rural Works', projects: 18, totalCr: 8.2, share: 18 },
-    { name: 'Surya Ganga Water', projects: 14, totalCr: 5.6, share: 12 },
-    { name: 'Vikas Building Assoc', projects: 11, totalCr: 4.8, share: 10 },
-    { name: 'Others (42 Vendors)', projects: 33, totalCr: 12.4, share: 28 },
-  ];
+  // 1. Multi-Year Financial Trend dynamically computed from store projects
+  const financialYearTrend = React.useMemo(() => {
+    const yearMap: Record<string, { sanctioned: number; utilized: number }> = {};
+    
+    projects.forEach((p) => {
+      const year = p.sanction_date ? parseInt(p.sanction_date.substring(0, 4)) : 2024;
+      const fiscalKey = `${year}-${String((year + 1) % 100).padStart(2, '0')}`;
+      if (!yearMap[fiscalKey]) {
+        yearMap[fiscalKey] = { sanctioned: 0, utilized: 0 };
+      }
+      yearMap[fiscalKey].sanctioned += p.sanctioned_amount || 0;
+      yearMap[fiscalKey].utilized += p.utilized_amount || 0;
+    });
 
-  const stateRiskDistribution = [
-    { state: 'Uttar Pradesh', avgRisk: 62, critical: 18 },
-    { state: 'Bihar', avgRisk: 58, critical: 12 },
-    { state: 'Maharashtra', avgRisk: 44, critical: 6 },
-    { state: 'Rajasthan', avgRisk: 41, critical: 4 },
-    { state: 'Madhya Pradesh', avgRisk: 46, critical: 5 },
-    { state: 'Karnataka', avgRisk: 34, critical: 2 },
-    { state: 'Tamil Nadu', avgRisk: 28, critical: 1 },
-  ];
+    return Object.entries(yearMap)
+      .map(([year, data]) => ({
+        year,
+        sanctioned: parseFloat((data.sanctioned / 10000000).toFixed(1)), // In ₹ Cr
+        utilized: parseFloat((data.utilized / 10000000).toFixed(1)),
+      }))
+      .sort((a, b) => a.year.localeCompare(b.year));
+  }, [projects]);
+
+  // 2. Vendor Market Concentration (HHI) dynamically computed
+  const { vendorConcentration, topVendorsShare } = React.useMemo(() => {
+    const totalAllSanctioned = projects.reduce((acc, p) => acc + (p.sanctioned_amount || 0), 0);
+    const vendorMap: Record<string, { name: string; count: number; totalAmt: number }> = {};
+
+    projects.forEach((p) => {
+      const vName = p.vendor_name || 'Designated Infrastructure Contractor';
+      if (!vendorMap[vName]) {
+        vendorMap[vName] = { name: vName, count: 0, totalAmt: 0 };
+      }
+      vendorMap[vName].count += 1;
+      vendorMap[vName].totalAmt += p.sanctioned_amount || 0;
+    });
+
+    const sorted = Object.values(vendorMap).sort((a, b) => b.totalAmt - a.totalAmt);
+    const top4 = sorted.slice(0, 4);
+    const others = sorted.slice(4);
+
+    const othersTotalAmt = others.reduce((acc, v) => acc + v.totalAmt, 0);
+    const othersCount = others.reduce((acc, v) => acc + v.count, 0);
+
+    const result = top4.map((v) => ({
+      name: v.name,
+      projects: v.count,
+      totalCr: parseFloat((v.totalAmt / 10000000).toFixed(1)),
+      share: totalAllSanctioned > 0 ? Math.round((v.totalAmt / totalAllSanctioned) * 100) : 0,
+    }));
+
+    if (othersCount > 0) {
+      result.push({
+        name: `Others (${others.length} Vendors)`,
+        projects: othersCount,
+        totalCr: parseFloat((othersTotalAmt / 10000000).toFixed(1)),
+        share: totalAllSanctioned > 0 ? Math.round((othersTotalAmt / totalAllSanctioned) * 100) : 0,
+      });
+    }
+
+    const topShare = top4.reduce((acc, v) => acc + (totalAllSanctioned > 0 ? (v.totalAmt / totalAllSanctioned) * 100 : 0), 0);
+
+    return { vendorConcentration: result, topVendorsShare: Math.round(topShare) };
+  }, [projects]);
+
+  // 3. State Risk Distribution dynamically computed
+  const stateRiskDistribution = React.useMemo(() => {
+    const stateMap: Record<string, { state: string; totalRisk: number; count: number; critical: number }> = {};
+
+    projects.forEach((p) => {
+      const stateName = p.state_name || 'Other';
+      if (!stateMap[stateName]) {
+        stateMap[stateName] = { state: stateName, totalRisk: 0, count: 0, critical: 0 };
+      }
+      stateMap[stateName].count += 1;
+      stateMap[stateName].totalRisk += p.risk_score || 0;
+      if (p.risk_level === 'CRITICAL' || p.risk_score >= 80) {
+        stateMap[stateName].critical += 1;
+      }
+    });
+
+    return Object.values(stateMap)
+      .map((s) => ({
+        state: s.state,
+        avgRisk: Math.round(s.totalRisk / (s.count || 1)),
+        critical: s.critical,
+      }))
+      .sort((a, b) => b.avgRisk - a.avgRisk);
+  }, [projects]);
 
   return (
     <div className="space-y-8 pb-12">
@@ -116,7 +184,7 @@ export const Analytics: React.FC = () => {
             </div>
 
             <p className="text-xs text-zinc-400 light:text-slate-600 leading-relaxed">
-              Top 4 vendors control 72% of all sanctioned project funds in high-density districts.
+              Top 4 vendors control {topVendorsShare}% of all sanctioned project funds across active jurisdictions.
             </p>
 
             <div className="space-y-3 pt-2">

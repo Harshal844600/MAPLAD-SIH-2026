@@ -316,6 +316,10 @@ class AppRepository {
     };
   }
 
+  public getAllProjects(): ProjectEntity[] {
+    return [...this.projects];
+  }
+
   public getProjectById(idOrCode: string): ProjectEntity | undefined {
     return this.projects.find((p) => p.id === idOrCode || p.project_code === idOrCode);
   }
